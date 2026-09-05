@@ -74,7 +74,7 @@ COLUMNS_ACCESSED (column_id, table_id, column_name)
 ### 1.3 System Architecture Overview
 **High-Level Flow:**
 
-![System Architecture Overview](images/system_architecture_overview.png)
+<img src="images/system_architecture_overview.png" alt="Alt text" width="800">
 
 **Assignment 1.3:** Draw and explain this architecture in detail.
 
