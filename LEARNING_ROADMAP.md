@@ -74,21 +74,7 @@ COLUMNS_ACCESSED (column_id, table_id, column_name)
 ### 1.3 System Architecture Overview
 **High-Level Flow:**
 
-```
-User Query
-    ↓
-[Query Interceptor] ← Capture query before execution
-    ↓
-[Access Control Layer] ← Check permissions (Views + Procedures)
-    ↓
-[Database Engine] ← Execute if authorized
-    ↓
-[Audit Logger] ← Store query log (Triggers)
-    ↓
-[ML Pipeline] ← Analyze patterns (Python)
-    ↓
-[Alert System] ← Flag anomalies
-```
+![System Architecture Overview](images/system_architecture_overview.png)
 
 **Assignment 1.3:** Draw and explain this architecture in detail.
 
