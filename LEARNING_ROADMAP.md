@@ -74,8 +74,7 @@ COLUMNS_ACCESSED (column_id, table_id, column_name)
 ### 1.3 System Architecture Overview
 **High-Level Flow:**
 
-![Uploading image.png…]()
-
+![System Architecture Overview](images/system_architecture_overview.png)
 
 **Assignment 1.3:** Draw and explain this architecture in detail.
 
