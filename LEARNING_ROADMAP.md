@@ -76,6 +76,7 @@ COLUMNS_ACCESSED (column_id, table_id, column_name)
 
 <img src="images/system_architecture_overview.png" alt="Alt text" width="800">
 
+
 **Assignment 1.3:** Draw and explain this architecture in detail.
 
 ---
