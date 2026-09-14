@@ -133,7 +133,7 @@ monitoring, auditing, and anomaly detection.
 
 ## 📊 ER Diagram
 
-![ANOMEX ER Diagram](images/Anomex-Page-2.drawio.png)
+![ANOMEX ER Diagram](images/AnomexER.jpg)
 
 ## ✨ Key Features
 
