@@ -147,7 +147,11 @@ monitoring, auditing, and anomaly detection.
 
 ## 👥 Team
 
-Team Rocket!!
+Ankita Salpekar
+Kranti Ingale
+Ayush Bage
+Ankita Karke
+Tanishq Shivasharan
 
 ## 📄 Project Status
 
