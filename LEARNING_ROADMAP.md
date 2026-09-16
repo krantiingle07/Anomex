@@ -390,6 +390,42 @@ We'll continue with:
 
 ---
 
+# Phase 7: Python ML - Anomaly Detection
+                 RAW DATABASE DATA
+                         │
+                         ▼
+                  ┌─────────────┐
+                  │   Dataset   │
+                  └──────┬──────┘
+                         │
+                  Each row is an
+                    observation
+                         │
+                         ▼
+                Feature Engineering
+                         │
+                         ▼
+              ┌─────────────────────┐
+              │       FEATURES      │
+              │                     │
+              │ hour                │
+              │ execution_time      │
+              │ failed              │
+              │ query_frequency     │
+              │ unique_resources    │
+              └──────────┬──────────┘
+                         │
+                         ▼
+                         X
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ Isolation Forest│
+                └────────┬────────┘
+                         │
+                         ▼
+                 Normal / Anomaly
+
 ## 📚 Resources
 - MySQL Documentation: https://dev.mysql.com/doc/
 - MySQL Tutorial: https://www.w3schools.com/mysql/
