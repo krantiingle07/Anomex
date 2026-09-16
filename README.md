@@ -147,11 +147,11 @@ monitoring, auditing, and anomaly detection.
 
 ## 👥 Team
 
-Ankita Salpekar
-Kranti Ingale
-Ayush Bage
-Ankita Karke
-Tanishq Shivasharan
+Kranti Ingale,
+Ankita Salpekar,
+Ankita Karke,
+Ayush Bage,
+Tanishq Shivasharan.
 
 ## 📄 Project Status
 
