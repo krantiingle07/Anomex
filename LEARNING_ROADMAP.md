@@ -426,6 +426,45 @@ We'll continue with:
                          ▼
                  Normal / Anomaly
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+                 YOUR DATA
+                     │
+                     ▼
+        ┌─────────────────────────┐
+        │ Feature Vector          │
+        │                         │
+        │ [hour,                  │
+        │  query_frequency,       │
+        │  execution_time,        │
+        │  failures,              │
+        │  unique_resources]      │
+        └────────────┬────────────┘
+                     │
+                     ▼
+             ISOLATION FOREST
+                     │
+          ┌──────────┼──────────┐
+          ↓          ↓          ↓
+        Tree 1     Tree 2     Tree 3
+          ↓          ↓          ↓
+       Random      Random     Random
+       splits      splits     splits
+          │          │          │
+          └──────────┼──────────┘
+                     ↓
+               Path lengths
+                     ↓
+             Anomaly assessment
+                     ↓
+              ┌──────┴──────┐
+              ↓             ↓
+           Normal        Anomaly
+             1               -1
+                             │
+                             ▼
+                           ALERT
+
 ## 📚 Resources
 - MySQL Documentation: https://dev.mysql.com/doc/
 - MySQL Tutorial: https://www.w3schools.com/mysql/
