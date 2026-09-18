@@ -73,24 +73,120 @@ INSERT INTO role_permissions (role_id, resource_id, operation) VALUES
 (4, 3, 'SELECT');
 
 -- ---------- QUERY_LOGS ----------
--- NORMAL activity: each user querying only what their role allows, during work hours
-INSERT INTO query_logs (user_id, query_text, query_hash, timestamp, execution_time_ms, status, database_name, session_id) VALUES
-(1, 'SELECT * FROM employees WHERE department = "IT"', 'h001', '2026-09-15 10:15:00', 45, 'SUCCESS', 'anomex_db', 'sess_001'), -- admin reading employees, fine
-(2, 'SELECT * FROM customers WHERE region = "West"', 'h002', '2026-09-15 11:02:00', 32, 'SUCCESS', 'anomex_db', 'sess_002'), -- analyst reading customers, fine
-(3, 'SELECT * FROM finance_summary WHERE quarter = "Q3"', 'h003', '2026-09-15 11:30:00', 28, 'SUCCESS', 'anomex_db', 'sess_003'), -- finance user in their own table
-(4, 'SELECT * FROM orders WHERE status = "pending"', 'h004', '2026-09-15 12:00:00', 15, 'SUCCESS', 'anomex_db', 'sess_004'), -- guest reading orders, fine
-(1, 'UPDATE employees SET department = "Ops" WHERE user_id = 4', 'h005', '2026-09-15 13:45:00', 22, 'SUCCESS', 'anomex_db', 'sess_005'), -- admin can update anything
-(3, 'UPDATE finance_summary SET reviewed = 1 WHERE quarter = "Q3"', 'h006', '2026-09-15 14:10:00', 19, 'SUCCESS', 'anomex_db', 'sess_006'), -- finance user updating their own view
-(2, 'SELECT * FROM orders LIMIT 50', 'h007', '2026-09-15 15:20:00', 12, 'SUCCESS', 'anomex_db', 'sess_007'); -- analyst reading orders, fine
+-- 50 realistic query log records
+-- Users: 1 = Admin, 2 = Analyst, 3 = Finance, 4 = Guest
 
--- ANOMALOUS activity: role overreach, off-hours access, unusually large result sets
-INSERT INTO query_logs (user_id, query_text, query_hash, timestamp, execution_time_ms, status, error_message, database_name, session_id) VALUES
-(2, 'SELECT * FROM employees', 'h008', '2026-09-15 16:05:00', 8, 'BLOCKED', 'Permission denied: Data Analyst cannot access employees', 'anomex_db', 'sess_008'), -- analyst tries to read a SECRET table they don't have rights to
-(4, 'DELETE FROM orders WHERE order_id = 105', 'h009', '2026-09-15 16:40:00', 5, 'BLOCKED', 'Permission denied: Guest role is read-only', 'anomex_db', 'sess_009'), -- guest tries to delete, should never be allowed
-(3, 'SELECT * FROM customers', 'h010', '2026-09-15 17:12:00', 9, 'BLOCKED', 'Permission denied: Finance User restricted to finance_summary', 'anomex_db', 'sess_010'), -- finance user straying outside their own table
-(2, 'SELECT * FROM customers', 'h011', '2026-09-16 02:47:00', 4200, 'SUCCESS', NULL, 'anomex_db', 'sess_011'), -- allowed table, but run at 2:47 AM and pulls a huge number of rows (see below)
-(4, 'SELECT * FROM employees', 'h012', '2026-09-16 03:10:00', 6, 'BLOCKED', 'Permission denied: Guest cannot access SECRET resources', 'anomex_db', 'sess_012'); -- guest probing a SECRET table at 3 AM
+INSERT INTO query_logs
+(user_id, query_text, query_hash, timestamp, execution_time_ms, status, database_name, session_id)
+VALUES
 
+-- =========================
+-- NORMAL ACTIVITY
+-- =========================
+
+(1, 'SELECT * FROM employees WHERE department = "IT"', 'h001', '2026-09-15 10:15:00', 45, 'SUCCESS', 'anomex_db', 'sess_001'),
+
+(2, 'SELECT * FROM customers WHERE region = "West"', 'h002', '2026-09-15 11:02:00', 32, 'SUCCESS', 'anomex_db', 'sess_002'),
+
+(3, 'SELECT * FROM finance_summary WHERE quarter = "Q3"', 'h003', '2026-09-15 11:30:00', 28, 'SUCCESS', 'anomex_db', 'sess_003'),
+
+(4, 'SELECT * FROM orders WHERE status = "pending"', 'h004', '2026-09-15 12:00:00', 15, 'SUCCESS', 'anomex_db', 'sess_004'),
+
+(1, 'UPDATE employees SET department = "Ops" WHERE user_id = 4', 'h005', '2026-09-15 13:45:00', 22, 'SUCCESS', 'anomex_db', 'sess_005'),
+
+(3, 'UPDATE finance_summary SET reviewed = 1 WHERE quarter = "Q3"', 'h006', '2026-09-15 14:10:00', 19, 'SUCCESS', 'anomex_db', 'sess_006'),
+
+(2, 'SELECT * FROM orders LIMIT 50', 'h007', '2026-09-15 15:20:00', 12, 'SUCCESS', 'anomex_db', 'sess_007'),
+
+(1, 'SELECT * FROM users WHERE is_active = TRUE', 'h008', '2026-09-15 09:20:00', 18, 'SUCCESS', 'anomex_db', 'sess_008'),
+
+(2, 'SELECT customer_id, name FROM customers WHERE region = "North"', 'h009', '2026-09-15 09:45:00', 24, 'SUCCESS', 'anomex_db', 'sess_009'),
+
+(3, 'SELECT * FROM transactions WHERE transaction_date >= "2026-09-01"', 'h010', '2026-09-15 10:05:00', 37, 'SUCCESS', 'anomex_db', 'sess_010'),
+
+(4, 'SELECT order_id, status FROM orders WHERE status = "completed"', 'h011', '2026-09-15 10:25:00', 14, 'SUCCESS', 'anomex_db', 'sess_011'),
+
+(1, 'SELECT * FROM roles', 'h012', '2026-09-15 10:40:00', 11, 'SUCCESS', 'anomex_db', 'sess_012'),
+
+(2, 'SELECT * FROM customers WHERE customer_id = 205', 'h013', '2026-09-15 11:15:00', 16, 'SUCCESS', 'anomex_db', 'sess_013'),
+
+(3, 'SELECT SUM(amount) FROM transactions WHERE quarter = "Q3"', 'h014', '2026-09-15 11:45:00', 41, 'SUCCESS', 'anomex_db', 'sess_014'),
+
+(4, 'SELECT COUNT(*) FROM orders WHERE status = "pending"', 'h015', '2026-09-15 12:20:00', 13, 'SUCCESS', 'anomex_db', 'sess_015'),
+
+(1, 'INSERT INTO audit_notes VALUES (101, "Routine review")', 'h016', '2026-09-15 12:45:00', 21, 'SUCCESS', 'anomex_db', 'sess_016'),
+
+(2, 'SELECT * FROM orders WHERE customer_id = 205', 'h017', '2026-09-15 13:10:00', 20, 'SUCCESS', 'anomex_db', 'sess_017'),
+
+(3, 'UPDATE finance_summary SET status = "reviewed" WHERE quarter = "Q3"', 'h018', '2026-09-15 13:30:00', 23, 'SUCCESS', 'anomex_db', 'sess_018'),
+
+(4, 'SELECT order_id, order_date FROM orders LIMIT 20', 'h019', '2026-09-15 13:50:00', 10, 'SUCCESS', 'anomex_db', 'sess_019'),
+
+(1, 'SELECT * FROM departments', 'h020', '2026-09-15 14:05:00', 17, 'SUCCESS', 'anomex_db', 'sess_020'),
+
+(2, 'SELECT name, email FROM customers WHERE region = "East"', 'h021', '2026-09-15 14:25:00', 29, 'SUCCESS', 'anomex_db', 'sess_021'),
+
+(3, 'SELECT * FROM finance_summary WHERE year = 2026', 'h022', '2026-09-15 14:40:00', 31, 'SUCCESS', 'anomex_db', 'sess_022'),
+
+(4, 'SELECT * FROM orders WHERE order_date = "2026-09-15"', 'h023', '2026-09-15 15:00:00', 18, 'SUCCESS', 'anomex_db', 'sess_023'),
+
+(1, 'UPDATE users SET is_active = TRUE WHERE user_id = 10', 'h024', '2026-09-15 15:15:00', 20, 'SUCCESS', 'anomex_db', 'sess_024'),
+
+(2, 'SELECT COUNT(*) FROM customers', 'h025', '2026-09-15 15:35:00', 26, 'SUCCESS', 'anomex_db', 'sess_025'),
+
+(3, 'SELECT AVG(amount) FROM transactions WHERE quarter = "Q3"', 'h026', '2026-09-15 15:50:00', 34, 'SUCCESS', 'anomex_db', 'sess_026'),
+
+(4, 'SELECT status, COUNT(*) FROM orders GROUP BY status', 'h027', '2026-09-15 16:05:00', 22, 'SUCCESS', 'anomex_db', 'sess_027'),
+
+(1, 'SELECT username, department FROM users', 'h028', '2026-09-15 16:20:00', 15, 'SUCCESS', 'anomex_db', 'sess_028'),
+
+(2, 'SELECT * FROM orders WHERE status = "shipped"', 'h029', '2026-09-15 16:35:00', 19, 'SUCCESS', 'anomex_db', 'sess_029'),
+
+(3, 'SELECT * FROM finance_summary WHERE status = "reviewed"', 'h030', '2026-09-15 16:50:00', 27, 'SUCCESS', 'anomex_db', 'sess_030'),
+
+-- =========================
+-- SECOND DAY NORMAL ACTIVITY
+-- =========================
+
+(1, 'SELECT * FROM employees WHERE department = "HR"', 'h031', '2026-09-16 09:10:00', 42, 'SUCCESS', 'anomex_db', 'sess_031'),
+
+(2, 'SELECT * FROM customers WHERE region = "South"', 'h032', '2026-09-16 09:35:00', 30, 'SUCCESS', 'anomex_db', 'sess_032'),
+
+(3, 'SELECT * FROM finance_summary WHERE quarter = "Q2"', 'h033', '2026-09-16 10:00:00', 25, 'SUCCESS', 'anomex_db', 'sess_033'),
+
+(4, 'SELECT * FROM orders WHERE status = "processing"', 'h034', '2026-09-16 10:20:00', 16, 'SUCCESS', 'anomex_db', 'sess_034'),
+
+(1, 'SELECT * FROM roles WHERE permission_level >= 5', 'h035', '2026-09-16 10:45:00', 13, 'SUCCESS', 'anomex_db', 'sess_035'),
+
+(2, 'SELECT customer_id, name FROM customers LIMIT 100', 'h036', '2026-09-16 11:05:00', 35, 'SUCCESS', 'anomex_db', 'sess_036'),
+
+(3, 'SELECT SUM(amount) FROM transactions', 'h037', '2026-09-16 11:30:00', 39, 'SUCCESS', 'anomex_db', 'sess_037'),
+
+(4, 'SELECT order_id FROM orders WHERE status = "pending"', 'h038', '2026-09-16 11:55:00', 12, 'SUCCESS', 'anomex_db', 'sess_038'),
+
+(1, 'UPDATE employees SET department = "Finance" WHERE user_id = 8', 'h039', '2026-09-16 12:20:00', 24, 'SUCCESS', 'anomex_db', 'sess_039'),
+
+(2, 'SELECT * FROM orders WHERE customer_id = 312', 'h040', '2026-09-16 12:45:00', 21, 'SUCCESS', 'anomex_db', 'sess_040'),
+
+(3, 'UPDATE finance_summary SET reviewed = 1 WHERE quarter = "Q2"', 'h041', '2026-09-16 13:15:00', 20, 'SUCCESS', 'anomex_db', 'sess_041'),
+
+(4, 'SELECT COUNT(*) FROM orders', 'h042', '2026-09-16 13:40:00', 11, 'SUCCESS', 'anomex_db', 'sess_042'),
+
+(1, 'SELECT * FROM employees ORDER BY created_at DESC LIMIT 20', 'h043', '2026-09-16 14:05:00', 38, 'SUCCESS', 'anomex_db', 'sess_043'),
+
+(2, 'SELECT * FROM customers WHERE customer_id = 410', 'h044', '2026-09-16 14:30:00', 17, 'SUCCESS', 'anomex_db', 'sess_044'),
+
+(3, 'SELECT AVG(amount) FROM transactions', 'h045', '2026-09-16 14:55:00', 33, 'SUCCESS', 'anomex_db', 'sess_045'),
+
+(4, 'SELECT order_id, status FROM orders LIMIT 30', 'h046', '2026-09-16 15:20:00', 15, 'SUCCESS', 'anomex_db', 'sess_046'),
+
+(1, 'SELECT * FROM departments WHERE is_active = TRUE', 'h047', '2026-09-16 15:45:00', 14, 'SUCCESS', 'anomex_db', 'sess_047'),
+
+(2, 'SELECT COUNT(*) FROM customers WHERE region = "West"', 'h048', '2026-09-16 16:05:00', 23, 'SUCCESS', 'anomex_db', 'sess_048'),
+
+(3, 'SELECT * FROM finance_summary WHERE year = 2026', 'h049', '2026-09-16 16:25:00', 29, 'SUCCESS', 'anomex_db', 'sess_049'),
+
+(4, 'SELECT status, COUNT(*) FROM orders GROUP BY status', 'h050', '2026-09-16 16:45:00', 20, 'SUCCESS', 'anomex_db', 'sess_050');
 -- ---------- ACCESSED_RESOURCES ----------
 -- For each query log above, record which resource it touched and how many rows
 INSERT INTO accessed_resources (log_id, resource_id, operation, rows_affected) VALUES
