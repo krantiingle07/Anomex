@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Financial Transaction System - Anomaly Detection Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ==========================================
+   ANOMEX — DARK TEAL / GREEN THEME
+   ========================================== */
+
+        :root {
+            --bg-dark: #092328;
+            --teal-dark: #12544F;
+            --green: #2A835F;
+            --green-light: #8BBB92;
+
+            --white: #ffffff;
+            --text-dark: #092328;
+            --text-muted: #5f7472;
+
+            --border: #d9e7e0;
+            --surface: #ffffff;
+            --surface-soft: #f3f8f5;
+
+            --danger: #c94b4b;
+            --warning: #d8912f;
+        }
+
+
+        /* ==========================================
+   GLOBAL
+   ========================================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top right,
+                    rgba(43, 131, 95, 0.25),
+                    transparent 35%),
+                var(--bg-dark);
+
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+
+        /* ==========================================
+   HEADER
+   ========================================== */
+
+        header {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+
+            border: 1px solid rgba(139, 187, 146, 0.35);
+
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        header h1 {
+            color: var(--teal-dark);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+        }
+
+
+        /* ==========================================
+   HEADER STATISTICS
+   ========================================== */
+
+        .header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background:
+                linear-gradient(135deg,
+                    var(--teal-dark),
+                    var(--green));
+
+            color: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+
+            box-shadow:
+                0 6px 18px rgba(9, 35, 40, 0.25);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 10px 25px rgba(9, 35, 40, 0.3);
+        }
+
+        .stat-box h3 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+
+        /* ==========================================
+   MAIN CONTENT
+   ========================================== */
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,
+                    minmax(500px, 1fr));
+
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 15px;
+
+            border: 1px solid var(--border);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .card h2 {
+            color: var(--teal-dark);
+            font-size: 1.5em;
+            margin-bottom: 20px;
+
+            border-bottom: 3px solid var(--green);
+            padding-bottom: 10px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+
+        /* ==========================================
+   ANOMALY TABLE
+   ========================================== */
+
+        .anomalies-section {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 15px;
+
+            border: 1px solid var(--border);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.18);
+
+            overflow-x: auto;
+        }
+
+        .anomalies-section h2 {
+            color: var(--teal-dark);
+            font-size: 1.5em;
+            margin-bottom: 20px;
+
+            border-bottom: 3px solid var(--green);
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: var(--teal-dark);
+            color: var(--white);
+
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table tr:hover {
+            background: var(--surface-soft);
+        }
+
+
+        /* ==========================================
+   BADGES
+   ========================================== */
+
+        .badge {
+            display: inline-block;
+
+            padding: 6px 12px;
+            border-radius: 20px;
+
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: #f9dddd;
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background: #fcebd0;
+            color: var(--warning);
+        }
+
+        .badge-success {
+            background: #dcefe1;
+            color: var(--green);
+        }
+
+        .badge-info {
+            background: #dcefeb;
+            color: var(--teal-dark);
+        }
+
+
+        /* ==========================================
+   SEVERITY INDICATOR
+   ========================================== */
+
+        .severity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .severity-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+
+            animation: pulse 2s infinite;
+        }
+
+        .severity-critical {
+            background: var(--danger);
+        }
+
+        .severity-high {
+            background: var(--warning);
+        }
+
+        .severity-medium {
+            background: #b9a34a;
+        }
+
+        .severity-low {
+            background: var(--green);
+        }
+
+
+        /* ==========================================
+   PULSE ANIMATION
+   ========================================== */
+
+        @keyframes pulse {
+
+            0% {
+                box-shadow:
+                    0 0 0 0 rgba(42, 131, 95, 0.6);
+            }
+
+            70% {
+                box-shadow:
+                    0 0 0 10px rgba(42, 131, 95, 0);
+            }
+
+            100% {
+                box-shadow:
+                    0 0 0 0 rgba(42, 131, 95, 0);
+            }
+        }
+
+
+        /* ==========================================
+   FILTERS & CONTROLS
+   ========================================== */
+
+        .controls {
+            background: var(--surface);
+
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+
+            border: 1px solid var(--border);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.18);
+
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(200px, 1fr));
+
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            color: var(--teal-dark);
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 10px;
+
+            border: 2px solid var(--border);
+            border-radius: 8px;
+
+            font-size: 0.95em;
+
+            background: #ffffff;
+            color: var(--text-dark);
+
+            transition:
+                border-color 0.3s,
+                box-shadow 0.3s;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+
+            border-color: var(--green);
+
+            box-shadow:
+                0 0 0 3px rgba(42, 131, 95, 0.12);
+        }
+
+
+        /* ==========================================
+   BUTTONS
+   ========================================== */
+
+        button {
+            background:
+                linear-gradient(135deg,
+                    var(--teal-dark),
+                    var(--green));
+
+            color: var(--white);
+
+            padding: 10px 25px;
+
+            border: none;
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-weight: 600;
+
+            transition:
+                transform 0.2s,
+                box-shadow 0.2s,
+                opacity 0.2s;
+
+            align-self: flex-end;
+            margin-top: auto;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 18px rgba(42, 131, 95, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+
+        /* ==========================================
+   DETAILS
+   ========================================== */
+
+        .details-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(150px, 1fr));
+
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: var(--surface-soft);
+
+            padding: 15px;
+            border-radius: 8px;
+
+            border-left: 4px solid var(--green);
+        }
+
+        .detail-item strong {
+            color: var(--teal-dark);
+
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .detail-item span {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+
+        /* ==========================================
+   LOADING & EMPTY STATES
+   ========================================== */
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state img {
+            width: 100px;
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--green);
+        }
+
+        .spinner {
+            border: 4px solid #e3eee8;
+            border-top: 4px solid var(--green);
+
+            border-radius: 50%;
+
+            width: 40px;
+            height: 40px;
+
+            animation: spin 1s linear infinite;
+
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
+        /* ==========================================
+   FOOTER
+   ========================================== */
+
+        footer {
+            background: var(--teal-dark);
+
+            padding: 20px;
+
+            border-radius: 15px;
+
+            text-align: center;
+
+            color: rgba(255, 255, 255, 0.75);
+
+            margin-top: 40px;
+
+            border: 1px solid rgba(139, 187, 146, 0.2);
+        }
+
+        footer a {
+            color: var(--green-light);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--white);
+            text-decoration: underline;
+        }
+
+
+        /* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+        @media (max-width: 768px) {
+
+            body {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            table th,
+            table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- ============ HEADER ============ -->
+        <header>
+            <h1>🛡️ Secure Financial Transaction System</h1>
+            <p>Real-Time Anomaly Detection & Access Control Dashboard</p>
+
+            <div class="header-stats">
+                <div class="stat-box">
+                    <h3 id="total-transactions">-</h3>
+                    <p>Total Transactions</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="anomalies-detected" style="color: #ff6b6b;">-</h3>
+                    <p>Anomalies Detected</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="success-rate">-</h3>
+                    <p>Success Rate</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="active-users">-</h3>
+                    <p>Active Users</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============ FILTERS ============ -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="severity-filter">Filter by Severity:</label>
+                <select id="severity-filter">
+                    <option value="">All Severities</option>
+                    <option value="CRITICAL">Critical</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="date-filter">Date Range:</label>
+                <input type="date" id="date-filter">
+            </div>
+
+            <div class="control-group">
+                <label for="user-filter">Filter by User ID:</label>
+                <input type="text" id="user-filter" placeholder="Leave blank for all">
+            </div>
+
+            <button onclick="applyFilters()">Apply Filters</button>
+        </div>
+
+        <!-- ============ DASHBOARD CHARTS ============ -->
+        <div class="dashboard">
+            <!-- Anomaly Score Distribution -->
+            <div class="card">
+                <h2>📊 Anomaly Score Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="anomalyScoreChart"></canvas>
+                </div>
+            </div>
+
+            <!-- User Query Frequency -->
+            <div class="card">
+                <h2>📈 User Query Frequency</h2>
+                <div class="chart-container">
+                    <canvas id="queryFrequencyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alerts Over Time -->
+            <div class="card">
+                <h2>⏰ Alerts Timeline</h2>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alert Type Distribution -->
+            <div class="card">
+                <h2>🚨 Alert Type Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="alertTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ ANOMALIES TABLE ============ -->
+        <div class="anomalies-section">
+            <h2>🚨 Detected Anomalies</h2>
+
+            <div id="anomalies-table-container" class="loading">
+                <div class="spinner"></div>
+                <p>Loading anomalies...</p>
+            </div>
+        </div>
+
+        <!-- ============ FOOTER ============ -->
+        <footer>
+            <p>🔐 Secure Financial Transaction System | Real-Time Anomaly Detection Engine</p>
+            <p>Part of <strong>DBMS Project - Phase 7</strong> | Database Security & ML Integration</p>
+            <p><a href="https://github.com/krantiingle07/Anomex">GitHub Repository</a></p>
+        </footer>
+    </div>
+
+    <!-- ============ JAVASCRIPT ============ -->
+    <script>
+        // Mock Data - Replace with real API calls
+        let allAnomalies = [
+            {
+                alert_id: 1,
+                user_id: 15,
+                severity: 'CRITICAL',
+                anomaly_score: -0.453,
+                description: 'User accessing from unusual location at 3 AM',
+                created_at: '2024-09-18 03:15:00',
+                total_queries: 5000,
+                max_exec_time: 10000
+            },
+            {
+                alert_id: 2,
+                user_id: 22,
+                severity: 'HIGH',
+                anomaly_score: -0.382,
+                description: 'Unusual query volume spike detected',
+                created_at: '2024-09-18 02:45:00',
+                total_queries: 200,
+                max_exec_time: 5000
+            },
+            {
+                alert_id: 3,
+                user_id: 8,
+                severity: 'MEDIUM',
+                anomaly_score: -0.215,
+                description: 'Accessing tables outside normal pattern',
+                created_at: '2024-09-17 22:30:00',
+                total_queries: 150,
+                max_exec_time: 2000
+            },
+            {
+                alert_id: 4,
+                user_id: 3,
+                severity: 'LOW',
+                anomaly_score: -0.125,
+                description: 'Minor deviation from baseline behavior',
+                created_at: '2024-09-17 18:20:00',
+                total_queries: 75,
+                max_exec_time: 500
+            }
+        ];
+
+        // Initialize Dashboard
+        function initDashboard() {
+            updateStats();
+            renderAnomaliesTable();
+            createCharts();
+        }
+
+        // Update Header Statistics
+        function updateStats() {
+            const totalTx = 15234;
+            const anomalies = allAnomalies.length;
+            const successRate = 99.2;
+            const activeUsers = 52;
+
+            document.getElementById('total-transactions').textContent = totalTx.toLocaleString();
+            document.getElementById('anomalies-detected').textContent = anomalies;
+            document.getElementById('success-rate').textContent = successRate + '%';
+            document.getElementById('active-users').textContent = activeUsers;
+        }
+
+        // Render Anomalies Table
+        function renderAnomaliesTable() {
+            const container = document.getElementById('anomalies-table-container');
+
+            if (allAnomalies.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No anomalies detected</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User ID</th>
+                            <th>Severity</th>
+                            <th>Score</th>
+                            <th>Description</th>
+                            <th>Time</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            allAnomalies.forEach(anomaly => {
+                const severityClass = `badge-${anomaly.severity === 'CRITICAL' ? 'danger' : anomaly.severity === 'HIGH' ? 'warning' : 'info'}`;
+                const severityDot = `severity-${anomaly.severity.toLowerCase()}`;
+
+                html += `
+                    <tr>
+                        <td>#${anomaly.alert_id}</td>
+                        <td><strong>${anomaly.user_id}</strong></td>
+                        <td>
+                            <span class="severity">
+                                <span class="severity-dot ${severityDot}"></span>
+                                <span class="badge ${severityClass}">${anomaly.severity}</span>
+                            </span>
+                        </td>
+                        <td><strong>${anomaly.anomaly_score.toFixed(3)}</strong></td>
+                        <td>${anomaly.description}</td>
+                        <td>${anomaly.created_at}</td>
+                        <td>
+                            <button onclick="showDetails(${anomaly.alert_id})" style="padding: 5px 10px; font-size: 0.85em;">View</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Show Details
+        function showDetails(alertId) {
+            const anomaly = allAnomalies.find(a => a.alert_id === alertId);
+            if (anomaly) {
+                alert(`
+User ID: ${anomaly.user_id}
+Severity: ${anomaly.severity}
+Score: ${anomaly.anomaly_score.toFixed(3)}
+Description: ${anomaly.description}
+Total Queries: ${anomaly.total_queries}
+Max Exec Time: ${anomaly.max_exec_time}ms
+Time: ${anomaly.created_at}
+                `);
+            }
+        }
+
+        // Create Charts
+        function createCharts() {
+            // Anomaly Score Distribution
+            const ctxScore = document.getElementById('anomalyScoreChart').getContext('2d');
+            new Chart(ctxScore, {
+                type: 'histogram',
+                data: {
+                    labels: ['Very Low', 'Low', 'Medium', 'High', 'Critical'],
+                    datasets: [{
+                        label: 'Anomaly Scores',
+                        data: [45, 28, 15, 8, 4],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e67e22', '#e74c3c', '#c0392b'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Query Frequency
+            const ctxFreq = document.getElementById('queryFrequencyChart').getContext('2d');
+            new Chart(ctxFreq, {
+                type: 'bar',
+                data: {
+                    labels: ['User 1', 'User 2', 'User 3', 'User 15', 'User 22'],
+                    datasets: [{
+                        label: 'Queries/Hour',
+                        data: [50, 100, 25, 500, 200],
+                        backgroundColor: '#667eea',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Timeline
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            new Chart(ctxTimeline, {
+                type: 'line',
+                data: {
+                    labels: ['12 AM', '6 AM', '12 PM', '6 PM', '12 AM'],
+                    datasets: [{
+                        label: 'Alerts',
+                        data: [2, 1, 3, 5, 4],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Alert Type Distribution
+            const ctxType = document.getElementById('alertTypeChart').getContext('2d');
+            new Chart(ctxType, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Behavioral', 'Policy Violation', 'Threshold Exceeded'],
+                    datasets: [{
+                        data: [12, 5, 3],
+                        backgroundColor: ['#667eea', '#e74c3c', '#f39c12'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            const severity = document.getElementById('severity-filter').value;
+            const userId = document.getElementById('user-filter').value;
+
+            allAnomalies = allAnomalies.filter(a => {
+                if (severity && a.severity !== severity) return false;
+                if (userId && a.user_id != userId) return false;
+                return true;
+            });
+
+            renderAnomaliesTable();
+        }
+
+        // Initialize on page load
+        window.onload = initDashboard;
+    </script>
+</body>
+
+</html>
