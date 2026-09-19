@@ -1,14 +1,19 @@
 const loginForm = document.getElementById("loginForm");
+const loginButton = document.getElementById("loginButton");
 const loginMessage = document.getElementById("loginMessage");
 
 loginForm.addEventListener("submit", async function (event) {
 
     event.preventDefault();
 
-    const username = document.getElementById("username").value;
+    const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
 
-    loginMessage.textContent = "Signing in...";
+    loginMessage.textContent = "";
+    loginMessage.className = "login-message";
+
+    loginButton.disabled = true;
+    loginButton.textContent = "Signing in...";
 
     try {
 
@@ -27,15 +32,28 @@ loginForm.addEventListener("submit", async function (event) {
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (data.success) {
 
             loginMessage.textContent = "Login successful.";
+            loginMessage.classList.add("success");
 
-            console.log("Authenticated user:", data.user);
+            /*
+             * Temporary storage for development.
+             * We will replace this with a proper session mechanism later.
+             */
+            sessionStorage.setItem("session_id", data.session_id);
+            sessionStorage.setItem("user_id", data.user_id);
+            sessionStorage.setItem("username", data.username);
+
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 500);
 
         } else {
 
             loginMessage.textContent = data.message;
+            loginMessage.classList.add("error");
+
         }
 
     } catch (error) {
@@ -44,5 +62,13 @@ loginForm.addEventListener("submit", async function (event) {
 
         loginMessage.textContent =
             "Unable to connect to the Anomex server.";
+
+        loginMessage.classList.add("error");
+
+    } finally {
+
+        loginButton.disabled = false;
+        loginButton.textContent = "Sign In";
+
     }
 });
