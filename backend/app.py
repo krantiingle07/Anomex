@@ -199,5 +199,155 @@ def logout():
         "message": "Logout successful"
     })
 
+@app.route("/api/anomalies", methods=["GET"])
+def get_anomalies():
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+        SELECT
+            aa.alert_id,
+            aa.log_id,
+            aa.alert_type,
+            aa.severity,
+            aa.anomaly_score,
+            aa.description,
+            aa.created_at,
+            aa.acknowledged,
+            q.user_id,
+            q.query_text,
+            q.execution_time_ms,
+            q.status
+        FROM anomaly_alerts aa
+        JOIN query_logs q
+            ON aa.log_id = q.log_id
+        ORDER BY aa.created_at DESC
+    """
+
+    cursor.execute(query)
+    anomalies = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(anomalies), 200
+
+@app.route("/api/dashboard", methods=["GET"])
+def dashboard_stats():
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+        SELECT
+            (SELECT COUNT(*) FROM query_logs) AS total_queries,
+
+            (SELECT COUNT(*) FROM anomaly_alerts) AS total_anomalies,
+
+            (SELECT COUNT(*)
+             FROM anomaly_alerts
+             WHERE acknowledged = 0) AS unacknowledged_alerts,
+
+            (SELECT COUNT(*)
+             FROM query_logs
+             WHERE status = 'FAILURE') AS failed_queries
+    """
+
+    cursor.execute(query)
+    stats = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(stats), 200
+
+@app.route("/api/query-logs", methods=["GET"])
+def get_query_logs():
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+        SELECT
+            log_id,
+            user_id,
+            query_text,
+            query_hash,
+            timestamp,
+            execution_time_ms,
+            status,
+            error_message,
+            database_name
+        FROM query_logs
+        ORDER BY timestamp DESC
+        LIMIT 100
+    """
+
+    cursor.execute(query)
+    logs = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(logs), 200
+
+# Users
+@app.route("/api/users", methods=["GET"])
+def get_users():
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT
+        u.user_id,
+        u.username,
+        u.email,
+        u.department,
+        u.is_active,
+        r.role_name,
+        r.permission_level
+    FROM users u
+    LEFT JOIN user_roles ur
+        ON u.user_id = ur.user_id
+    LEFT JOIN roles r
+        ON ur.role_id = r.role_id
+    ORDER BY u.user_id
+"""
+
+    cursor.execute(query)
+    users = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(users), 200
+
+# Roles
+@app.route("/api/roles", methods=["GET"])
+def get_roles():
+
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT
+        role_id,
+        role_name,
+        description,
+        permission_level
+    FROM roles
+    ORDER BY permission_level DESC
+"""
+
+    cursor.execute(query)
+    roles = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(roles), 200
+
 if __name__ == "__main__":
     app.run(debug=True)

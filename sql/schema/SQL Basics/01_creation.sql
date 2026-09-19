@@ -43,6 +43,20 @@ CREATE TABLE users (
     is_active TINYINT(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE sessions (
+    session_id VARCHAR(128) PRIMARY KEY,
+    user_id INT NOT NULL,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP NULL,
+    ip_address VARCHAR(45),
+    session_status VARCHAR(20) DEFAULT 'ACTIVE',
+
+    CONSTRAINT fk_sessions_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
 -- Defines the roles that can be given to users (Admin, Analyst, etc.)
 CREATE TABLE roles (
     role_id INT AUTO_INCREMENT PRIMARY KEY,
