@@ -72,3 +72,37 @@ loginForm.addEventListener("submit", async function (event) {
 
     }
 });
+
+// Password visibility toggle
+const passwordInput = document.getElementById("password");
+const passwordToggle = document.getElementById("passwordToggle");
+
+passwordToggle.addEventListener("click", function () {
+
+    if (passwordInput.type === "password") {
+
+        passwordInput.type = "text";
+
+        passwordToggle.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+        `;
+
+    } else {
+
+        passwordInput.type = "password";
+
+        passwordToggle.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18"></path>
+                <path d="M10.6 5.2A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a18.7 18.7 0 0 1-3.1 3.9"></path>
+                <path d="M6.1 6.1C3.5 7.8 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"></path>
+                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"></path>
+            </svg>
+        `;
+
+    }
+
+});

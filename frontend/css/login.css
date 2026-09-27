@@ -1,0 +1,530 @@
+/* =========================================================
+   ANOMEX LOGIN PAGE
+   Clean Dark Green Security Theme
+   ========================================================= */
+
+:root {
+    --bg: #08100d;
+    --bg-soft: #0b1511;
+
+    --card: #12201a;
+    --card-light: #172921;
+
+    --border: #263c32;
+    --border-light: #355146;
+
+    --green: #55d98b;
+    --green-light: #8ee6ae;
+
+    --text: #edf5f0;
+    --text-soft: #b8c9c0;
+    --muted: #7d9388;
+
+    --danger: #e66b6b;
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.login-page {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px;
+
+    position: relative;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(85, 217, 139, 0.06),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(85, 217, 139, 0.04),
+            transparent 32%
+        ),
+        var(--bg);
+}
+
+
+/* subtle grid */
+
+.login-page::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background-image:
+        linear-gradient(
+            rgba(85, 217, 139, 0.018) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(85, 217, 139, 0.018) 1px,
+            transparent 1px
+        );
+
+    background-size: 55px 55px;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   LOGIN CARD
+   ========================================================= */
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+
+    padding: 42px 42px 32px;
+
+    background: rgba(18, 32, 26, 0.97);
+
+    border: 1px solid var(--border);
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45);
+
+    position: relative;
+    z-index: 2;
+}
+
+
+/* small green line at top */
+
+.login-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: -1px;
+    left: 40px;
+
+    width: 70px;
+    height: 2px;
+
+    background: var(--green);
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 38px;
+}
+
+
+/* Logo box */
+
+.brand-mark {
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+
+    /*border: 1px solid var(--green);*/
+
+    color: var(--green);
+
+    font-size: 22px;
+    font-weight: 700;
+
+    flex-shrink: 0;
+}
+
+
+/* If using actual logo image */
+
+.brand-mark img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+}
+
+
+/* Brand name */
+
+.brand h1 {
+    color: #f0f6f2;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 4px;
+}
+
+.brand p {
+    color: var(--muted);
+
+    font-size: 9px;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   LOGIN HEADING
+   ========================================================= */
+
+.login-heading {
+    margin-bottom: 30px;
+}
+
+.login-heading h2 {
+    color: var(--text);
+
+    font-size: 27px;
+    font-weight: 600;
+
+    margin-bottom: 9px;
+}
+
+.login-heading p {
+    color: var(--text-soft);
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+#loginForm {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 21px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #d5e2dc;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.form-group input {
+    width: 100%;
+    height: 47px;
+
+    padding: 0 14px;
+
+    background: #0d1914;
+
+    border: 1px solid var(--border);
+
+    border-radius: 4px;
+
+    outline: none;
+
+    color: var(--text);
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+
+    transition: 0.2s;
+}
+
+.form-group input::placeholder {
+    color: #64796f;
+}
+
+.form-group input:hover {
+    border-color: var(--border-light);
+}
+
+.form-group input:focus {
+    border-color: var(--green);
+
+    background: #101d17;
+
+    box-shadow:
+        0 0 0 3px rgba(85, 217, 139, 0.08);
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+#loginButton {
+    width: 100%;
+    height: 47px;
+
+    margin-top: 5px;
+
+    border: 1px solid var(--green);
+
+    border-radius: 4px;
+
+    background: var(--green);
+
+    color: #07100b;
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+#loginButton:hover {
+    background: var(--green-light);
+
+    border-color: var(--green-light);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 25px rgba(85, 217, 139, 0.12);
+}
+
+#loginButton:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   LOGIN MESSAGE
+   ========================================================= */
+
+.login-message {
+    min-height: 18px;
+
+    margin-top: 13px;
+
+    text-align: center;
+
+    color: var(--danger);
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-top: 28px;
+    padding-top: 20px;
+
+    border-top: 1px solid #1d3027;
+
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+.security-note span {
+    color: var(--green);
+
+    font-size: 9px;
+
+    text-shadow:
+        0 0 8px rgba(85, 217, 139, 0.5);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 520px) {
+
+    .login-page {
+        padding: 25px 15px;
+    }
+
+    .login-card {
+        padding: 35px 25px 27px;
+    }
+
+    .login-card::before {
+        left: 25px;
+    }
+
+    .brand {
+        margin-bottom: 32px;
+    }
+
+    .brand-mark {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+    border: none;
+
+    flex-shrink: 0;
+}
+
+.brand-mark img {
+    width: 64px;
+    height: 64px;
+
+    object-fit: contain;
+    display: block;
+}
+
+    .login-heading h2 {
+        font-size: 24px;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    .login-card {
+        padding: 30px 20px 25px;
+    }
+
+    .brand h1 {
+        font-size: 19px;
+    }
+
+    .brand p {
+        font-size: 8px;
+    }
+}
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 48px;
+}
+
+.password-toggle {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    color: #7d9388;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: #55d98b;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.password-toggle svg {
+    width: 18px;
+    height: 18px;
+
+    display: block;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
