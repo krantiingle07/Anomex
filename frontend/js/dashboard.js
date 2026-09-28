@@ -10,6 +10,10 @@ if (!sessionId) {
 
 async function loadDashboard() {
 
+    if (!sessionId) {
+        return;
+    }
+
     try {
 
         const response = await fetch(
@@ -26,7 +30,9 @@ async function loadDashboard() {
         const data = await response.json();
 
         if (!data.success) {
-            sessionStorage.clear();
+            sessionStorage.removeItem("session_id");
+            sessionStorage.removeItem("user_id");
+            sessionStorage.removeItem("username");
             window.location.href = "login.html";
             return;
         }
@@ -66,7 +72,9 @@ logoutButton.addEventListener("click", async function () {
 
     } finally {
 
-        sessionStorage.clear();
+        sessionStorage.removeItem("session_id");
+        sessionStorage.removeItem("user_id");
+        sessionStorage.removeItem("username");
         window.location.href = "login.html";
 
     }

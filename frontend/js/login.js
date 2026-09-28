@@ -32,7 +32,7 @@ loginForm.addEventListener("submit", async function (event) {
 
         const data = await response.json();
 
-        if (data.success) {
+        if (response.ok && data?.success && data.session_id) {
 
             loginMessage.textContent = "Login successful.";
             loginMessage.classList.add("success");
@@ -51,7 +51,7 @@ loginForm.addEventListener("submit", async function (event) {
 
         } else {
 
-            loginMessage.textContent = data.message;
+            loginMessage.textContent = data?.message || "Login failed. Please try again.";
             loginMessage.classList.add("error");
 
         }
