@@ -1,8 +1,15 @@
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import secrets
 import bcrypt
-# from backend.services.auth_service import authenticate_user
 from backend.database.connection import get_connection
 
 
@@ -59,6 +66,15 @@ def login():
             "success": False,
             "message": "User account is inactive"
         }), 403
+
+    if not user.get("password_hash"):
+        cursor.close()
+        connection.close()
+
+        return jsonify({
+            "success": False,
+            "message": "Invalid username or password"
+        }), 401
 
     password_bytes = password.encode("utf-8")
     stored_hash = user["password_hash"].encode("utf-8")
@@ -125,14 +141,14 @@ SELECT
     u.username,
     u.email,
     u.department,
-    r.role_name,
-    r.permission_level
+    COALESCE(r.role_name, 'No Role Assigned') AS role_name,
+    COALESCE(r.permission_level, 0) AS permission_level
 FROM sessions s
 JOIN users u
     ON s.user_id = u.user_id
-JOIN user_roles ur
+LEFT JOIN user_roles ur
     ON u.user_id = ur.user_id
-JOIN roles r
+LEFT JOIN roles r
     ON ur.role_id = r.role_id
 WHERE s.session_id = %s
   AND s.session_status = 'ACTIVE'

@@ -1,7 +1,19 @@
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from backend.database.connection import get_connection
 
 
 def save_anomalies(data):
+    """
+    Saves detected anomalous queries into the anomaly_alerts table.
+    Properly maps negative Isolation Forest scores to normalized severity scores (0.0 - 1.0).
+    """
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -20,12 +32,13 @@ def save_anomalies(data):
     saved_count = 0
 
     for _, row in data[data["is_anomaly"] == 1].iterrows():
+        raw_score = float(row["anomaly_score"])
 
-        # Convert Isolation Forest score
-        # into a value between 0 and 1.
-        score = min(max((row["anomaly_score"] + 1) / 2, 0), 1)
+        # Isolation Forest score_samples() returns lower/more negative values for anomalies (e.g. -0.85).
+        # We normalize this into a 0.0 (normal) to 1.0 (extreme anomaly) score.
+        score = min(max((-raw_score - 0.40) / 0.50, 0.0), 1.0)
 
-        # Determine severity
+        # Determine severity based on calibrated anomaly score
         if score >= 0.8:
             severity = "CRITICAL"
         elif score >= 0.6:

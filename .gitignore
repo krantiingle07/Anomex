@@ -1,9 +1,20 @@
-# .gitignore
+# Environment variables
 .env
 .env.local
+
+# Logs and Python cache
 *.log
 __pycache__/
+*.pyc
+tempCodeRunnerFile.py
+
+# Virtual environments
 venv/
+.venv/
+env/
+
+# IDE & Editor files
 .DS_Store
 .idea/
 .vscode/
+.ipynb_checkpoints/
