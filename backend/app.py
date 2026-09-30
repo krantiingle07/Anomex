@@ -10,11 +10,18 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import secrets
 import bcrypt
+
 from backend.database.connection import get_connection
 
 
 app = Flask(__name__)
 CORS(app)
+
+
+# ============================================================
+# HOME
+# ============================================================
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
@@ -22,10 +29,21 @@ def home():
         "message": "Anomex backend is running"
     })
 
+
+# ============================================================
+# LOGIN
+# ============================================================
+
 @app.route("/login", methods=["POST"])
 def login():
 
     data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "Request body is required"
+        }), 400
 
     username = data.get("username")
     password = data.get("password")
@@ -36,14 +54,17 @@ def login():
             "message": "Username and password are required"
         }), 400
 
-    # user = authenticate_user(username, password)
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
 
     query = """
-    SELECT user_id, username, password_hash, is_active
-    FROM users
-    WHERE username = %s
+        SELECT
+            user_id,
+            username,
+            password_hash,
+            is_active
+        FROM users
+        WHERE username = %s
     """
 
     cursor.execute(query, (username,))
@@ -88,23 +109,20 @@ def login():
             "message": "Invalid username or password"
         }), 401
 
-    # Generate a unique session ID
+    # Generate unique session ID
     session_id = secrets.token_urlsafe(32)
-
-    # Get client IP
-    ip_address = request.remote_addr
 
     # Store session
     session_query = """
-    INSERT INTO sessions
-        (session_id, user_id, ip_address, session_status)
-    VALUES
-        (%s, %s, %s, 'ACTIVE')
+        INSERT INTO sessions
+            (session_id, user_id, login_time, is_active)
+        VALUES
+            (%s, %s, CURRENT_TIMESTAMP, TRUE)
     """
 
     cursor.execute(
         session_query,
-        (session_id, user["user_id"], ip_address)
+        (session_id, user["user_id"])
     )
 
     connection.commit()
@@ -119,6 +137,11 @@ def login():
         "user_id": user["user_id"],
         "username": user["username"]
     }), 200
+
+
+# ============================================================
+# DASHBOARD / CURRENT USER
+# ============================================================
 
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
@@ -135,25 +158,25 @@ def dashboard():
     cursor = connection.cursor(dictionary=True)
 
     query = """
-SELECT
-    s.session_id,
-    u.user_id,
-    u.username,
-    u.email,
-    u.department,
-    COALESCE(r.role_name, 'No Role Assigned') AS role_name,
-    COALESCE(r.permission_level, 0) AS permission_level
-FROM sessions s
-JOIN users u
-    ON s.user_id = u.user_id
-LEFT JOIN user_roles ur
-    ON u.user_id = ur.user_id
-LEFT JOIN roles r
-    ON ur.role_id = r.role_id
-WHERE s.session_id = %s
-  AND s.session_status = 'ACTIVE'
-  AND u.is_active = 1
-"""
+        SELECT
+            s.session_id,
+            u.user_id,
+            u.username,
+            u.email,
+            u.department,
+            COALESCE(r.role_name, 'No Role Assigned') AS role_name,
+            COALESCE(r.permission_level, 0) AS permission_level
+        FROM sessions s
+        JOIN users u
+            ON s.user_id = u.user_id
+        LEFT JOIN user_roles ur
+            ON u.user_id = ur.user_id
+        LEFT JOIN roles r
+            ON ur.role_id = r.role_id
+        WHERE s.session_id = %s
+          AND s.is_active = TRUE
+          AND u.is_active = TRUE
+    """
 
     cursor.execute(query, (session_id,))
     user = cursor.fetchone()
@@ -171,7 +194,12 @@ WHERE s.session_id = %s
         "success": True,
         "message": "Authenticated",
         "user": user
-    })
+    }), 200
+
+
+# ============================================================
+# LOGOUT
+# ============================================================
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -188,11 +216,11 @@ def logout():
     cursor = connection.cursor()
 
     query = """
-    UPDATE sessions
-    SET session_status = 'ENDED',
-        logout_time = CURRENT_TIMESTAMP
-    WHERE session_id = %s
-      AND session_status = 'ACTIVE'
+        UPDATE sessions
+        SET is_active = FALSE,
+            logout_time = CURRENT_TIMESTAMP
+        WHERE session_id = %s
+          AND is_active = TRUE
     """
 
     cursor.execute(query, (session_id,))
@@ -213,7 +241,12 @@ def logout():
     return jsonify({
         "success": True,
         "message": "Logout successful"
-    })
+    }), 200
+
+
+# ============================================================
+# ANOMALIES
+# ============================================================
 
 @app.route("/api/anomalies", methods=["GET"])
 def get_anomalies():
@@ -229,7 +262,7 @@ def get_anomalies():
             aa.severity,
             aa.anomaly_score,
             aa.description,
-            aa.created_at,
+            aa.detected_at,
             aa.acknowledged,
             q.user_id,
             q.query_text,
@@ -238,7 +271,7 @@ def get_anomalies():
         FROM anomaly_alerts aa
         JOIN query_logs q
             ON aa.log_id = q.log_id
-        ORDER BY aa.created_at DESC
+        ORDER BY aa.detected_at DESC
     """
 
     cursor.execute(query)
@@ -249,6 +282,11 @@ def get_anomalies():
 
     return jsonify(anomalies), 200
 
+
+# ============================================================
+# DASHBOARD STATISTICS
+# ============================================================
+
 @app.route("/api/dashboard", methods=["GET"])
 def dashboard_stats():
 
@@ -257,13 +295,15 @@ def dashboard_stats():
 
     query = """
         SELECT
-            (SELECT COUNT(*) FROM query_logs) AS total_queries,
+            (SELECT COUNT(*)
+             FROM query_logs) AS total_queries,
 
-            (SELECT COUNT(*) FROM anomaly_alerts) AS total_anomalies,
+            (SELECT COUNT(*)
+             FROM anomaly_alerts) AS total_anomalies,
 
             (SELECT COUNT(*)
              FROM anomaly_alerts
-             WHERE acknowledged = 0) AS unacknowledged_alerts,
+             WHERE acknowledged = FALSE) AS unacknowledged_alerts,
 
             (SELECT COUNT(*)
              FROM query_logs
@@ -278,6 +318,11 @@ def dashboard_stats():
 
     return jsonify(stats), 200
 
+
+# ============================================================
+# QUERY LOGS
+# ============================================================
+
 @app.route("/api/query-logs", methods=["GET"])
 def get_query_logs():
 
@@ -288,13 +333,13 @@ def get_query_logs():
         SELECT
             log_id,
             user_id,
+            session_id,
             query_text,
-            query_hash,
-            timestamp,
+            resource,
             execution_time_ms,
             status,
             error_message,
-            database_name
+            timestamp
         FROM query_logs
         ORDER BY timestamp DESC
         LIMIT 100
@@ -308,7 +353,11 @@ def get_query_logs():
 
     return jsonify(logs), 200
 
-# Users
+
+# ============================================================
+# USERS
+# ============================================================
+
 @app.route("/api/users", methods=["GET"])
 def get_users():
 
@@ -316,21 +365,21 @@ def get_users():
     cursor = connection.cursor(dictionary=True)
 
     query = """
-    SELECT
-        u.user_id,
-        u.username,
-        u.email,
-        u.department,
-        u.is_active,
-        r.role_name,
-        r.permission_level
-    FROM users u
-    LEFT JOIN user_roles ur
-        ON u.user_id = ur.user_id
-    LEFT JOIN roles r
-        ON ur.role_id = r.role_id
-    ORDER BY u.user_id
-"""
+        SELECT
+            u.user_id,
+            u.username,
+            u.email,
+            u.department,
+            u.is_active,
+            r.role_name,
+            r.permission_level
+        FROM users u
+        LEFT JOIN user_roles ur
+            ON u.user_id = ur.user_id
+        LEFT JOIN roles r
+            ON ur.role_id = r.role_id
+        ORDER BY u.user_id
+    """
 
     cursor.execute(query)
     users = cursor.fetchall()
@@ -340,7 +389,11 @@ def get_users():
 
     return jsonify(users), 200
 
-# Roles
+
+# ============================================================
+# ROLES
+# ============================================================
+
 @app.route("/api/roles", methods=["GET"])
 def get_roles():
 
@@ -348,14 +401,14 @@ def get_roles():
     cursor = connection.cursor(dictionary=True)
 
     query = """
-    SELECT
-        role_id,
-        role_name,
-        description,
-        permission_level
-    FROM roles
-    ORDER BY permission_level DESC
-"""
+        SELECT
+            role_id,
+            role_name,
+            description,
+            permission_level
+        FROM roles
+        ORDER BY permission_level DESC
+    """
 
     cursor.execute(query)
     roles = cursor.fetchall()
@@ -364,6 +417,11 @@ def get_roles():
     connection.close()
 
     return jsonify(roles), 200
+
+
+# ============================================================
+# RUN SERVER
+# ============================================================
 
 if __name__ == "__main__":
     app.run(debug=True)

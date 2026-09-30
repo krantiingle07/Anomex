@@ -35,83 +35,75 @@
 -- 1. Stores every user of the system (who can run queries)
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    department VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_active TINYINT(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    department VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- 2. Maintains user session information
 CREATE TABLE sessions (
-    session_id VARCHAR(128) PRIMARY KEY,
+    session_id VARCHAR(255) PRIMARY KEY,
     user_id INT NOT NULL,
     login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     logout_time TIMESTAMP NULL,
-    ip_address VARCHAR(45),
-    session_status VARCHAR(20) DEFAULT 'ACTIVE',
-
-    CONSTRAINT fk_sessions_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-        ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
 
 -- 3. Defines the roles that can be given to users (Admin, Analyst, etc.)
 CREATE TABLE roles (
     role_id INT AUTO_INCREMENT PRIMARY KEY,
-    role_name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    permission_level INT CHECK (permission_level BETWEEN 1 AND 10)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    role_name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    permission_level INT NOT NULL
+);
 
 -- 4. Links users to roles (many-to-many: a user can have more than one role)
 CREATE TABLE user_roles (
-    user_role_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     role_id INT NOT NULL,
-    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+);
 
 -- 5. Lists the database objects (tables/views) that can be protected/monitored
 CREATE TABLE resources (
     resource_id INT AUTO_INCREMENT PRIMARY KEY,
-    resource_name VARCHAR(100) UNIQUE NOT NULL,
-    resource_type VARCHAR(20) CHECK (resource_type IN ('TABLE', 'VIEW', 'FUNCTION')),
-    sensitivity_level VARCHAR(20) CHECK (sensitivity_level IN ('PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'SECRET')),
-    description TEXT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    resource_name VARCHAR(100) NOT NULL UNIQUE,
+    resource_type VARCHAR(50),
+    description VARCHAR(255)
+);
 
 -- 6. Says which role is allowed to do which operation on which resource
 CREATE TABLE role_permissions (
     permission_id INT AUTO_INCREMENT PRIMARY KEY,
     role_id INT NOT NULL,
     resource_id INT NOT NULL,
-    operation VARCHAR(20) CHECK (operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL')),
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(role_id, resource_id, operation),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE,
-    FOREIGN KEY (resource_id) REFERENCES resources(resource_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    can_read BOOLEAN DEFAULT FALSE,
+    can_write BOOLEAN DEFAULT FALSE,
+    can_delete BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id),
+    FOREIGN KEY (resource_id) REFERENCES resources(resource_id)
+);
 
 -- 7. Main audit table: records every query that gets run and its outcome
 CREATE TABLE query_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    query_text TEXT NOT NULL,
-    query_hash VARCHAR(64),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    session_id VARCHAR(255),
+    query_text TEXT,
+    resource VARCHAR(255),
     execution_time_ms INT,
-    status VARCHAR(20) CHECK (status IN ('SUCCESS', 'FAILURE', 'BLOCKED')),
+    status ENUM('SUCCESS', 'FAILURE', 'BLOCKED') NOT NULL,
     error_message TEXT,
-    database_name VARCHAR(50),
-    session_id VARCHAR(128),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id)
+);
 
 -- 8. Records exactly which resource(s) a logged query touched
 CREATE TABLE accessed_resources (
@@ -129,17 +121,22 @@ CREATE TABLE accessed_resources (
 CREATE TABLE anomaly_alerts (
     alert_id INT AUTO_INCREMENT PRIMARY KEY,
     log_id INT NOT NULL,
-    alert_type VARCHAR(50) CHECK (alert_type IN ('BEHAVIORAL', 'POLICY_VIOLATION', 'THRESHOLD_EXCEEDED')),
-    severity VARCHAR(10) CHECK (severity IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
-    anomaly_score DECIMAL(5,4) CHECK (anomaly_score BETWEEN 0 AND 1),
+    alert_type ENUM(
+        'BEHAVIORAL',
+        'POLICY_VIOLATION',
+        'THRESHOLD_EXCEEDED'
+    ) NOT NULL,
+    severity ENUM(
+        'LOW',
+        'MEDIUM',
+        'HIGH',
+        'CRITICAL'
+    ) NOT NULL,
+    anomaly_score DECIMAL(5,4),
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    acknowledged TINYINT(1) DEFAULT 0,
-    acknowledged_by INT,
-    acknowledged_at TIMESTAMP NULL,
-    FOREIGN KEY (log_id) REFERENCES query_logs(log_id),
-    FOREIGN KEY (acknowledged_by) REFERENCES users(user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (log_id) REFERENCES query_logs(log_id)
+);
 
 -- 10. Stores each user's "normal" behavior pattern, used to spot deviations
 CREATE TABLE user_baseline (
@@ -156,24 +153,26 @@ CREATE TABLE user_baseline (
 -- 11. Defines the rules the system checks queries against (time, volume, etc.)
 CREATE TABLE access_policies (
     policy_id INT AUTO_INCREMENT PRIMARY KEY,
-    policy_name VARCHAR(100) UNIQUE NOT NULL,
+    policy_name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    rule_type VARCHAR(50) CHECK (rule_type IN ('TIME_BASED', 'DATA_VOLUME', 'RESOURCE_BASED', 'CUSTOM')),
-    rule_definition JSON,
-    is_active TINYINT(1) DEFAULT 1,
+    rule_definition TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- 12. Records which query broke which policy
 CREATE TABLE policy_violations (
     violation_id INT AUTO_INCREMENT PRIMARY KEY,
-    log_id INT NOT NULL,
-    policy_id INT NOT NULL,
-    violation_details TEXT,
-    flagged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (log_id) REFERENCES query_logs(log_id),
-    FOREIGN KEY (policy_id) REFERENCES access_policies(policy_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    user_id INT NOT NULL,
+    log_id INT,
+    policy_name VARCHAR(100),
+    violation_type VARCHAR(100),
+    description TEXT,
+    severity ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'),
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (log_id) REFERENCES query_logs(log_id)
+);
 
 -- ============================================
 -- INDEXES (speed up common lookups)

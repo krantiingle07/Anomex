@@ -25,11 +25,13 @@
 
 -- ---------- ROLES ----------
 -- 4 basic roles, from full access (10) down to almost none (1)
-INSERT INTO roles (role_id, role_name, description, permission_level) VALUES
-(1, 'Database Admin', 'Full database access', 10),
-(2, 'Data Analyst', 'Read-only access to most tables', 6),
-(3, 'Finance User', 'Finance table access only', 4),
-(4, 'Guest', 'Very limited read access', 1);
+INSERT INTO roles
+(role_name, description, permission_level)
+VALUES
+('Database Admin', 'Full database administration access', 5),
+('Data Analyst', 'Read and analyze database information', 3),
+('Finance User', 'Access finance-related resources', 2),
+('Guest', 'Limited read-only access', 1);
 
 -- ---------- USERS ----------
 -- 4 sample employees with bcrypt hashed passwords:
@@ -37,12 +39,13 @@ INSERT INTO roles (role_id, role_name, description, permission_level) VALUES
 -- bob_analyst     -> Analyst@123
 -- charlie_finance -> Finance@123
 -- diana_user      -> Guest@123
-INSERT INTO users (user_id, username, email, password_hash, department, is_active) VALUES
-(1, 'alice_admin', 'alice@company.com', '$2b$12$LHjInjuSmHrHlViGixXVCO6vg/BUuvjPemHkYGT/8M3cofHc7Ifeq', 'IT', 1),
-(2, 'bob_analyst', 'bob@company.com', '$2b$12$2hknlb.0IwyJATV9AgBI.e036AekiYr01OLBk6s1lgH2wC6oiV66O', 'Analytics', 1),
-(3, 'charlie_finance', 'charlie@company.com', '$2b$12$bPsykic3vHrDudiw8LAOR.P95McReV.oEpwxH4N5MmhkuXu1qvsyG', 'Finance', 1),
-(4, 'diana_user', 'diana@company.com', '$2b$12$bmn/b0lLqBYo/Gvf/oIhK.706C8lDkv6x12c4hBgnU0tcUfzAQBzC', 'HR', 1);
-
+INSERT INTO users
+(username, email, password_hash, department, is_active)
+VALUES
+('alice_admin', 'alice@anomex.local', '$2b$12$HyVqgB.AMUoVk860nS2y1utFaUYX0PPBI.1XyxMBrghmbzTuLieLC', 'IT', 1),
+('bob_analyst', 'bob@anomex.local', '$2b$12$qO8w2nC3MoFNk6jeeIyMtOBhX87OEnNCvWaqjIgHATM42pQR.7Cva', 'Analytics', 1),
+('charlie_finance', 'charlie@anomex.local', '$2b$12$IdRSoIG6d3i9rOptgGBq0.YIwBsCZJQmBSl.zmiViLJmrbU34isve', 'Finance', 1),
+('diana_guest', 'diana@anomex.local', '$2b$12$BpL9bBxcexbldPqWgyWBJuW3wO7VWcFxNtmFq.lJpXEDdYWZ5tKeK', 'General', 1);
 -- ---------- RESOURCES ----------
 -- The 4 tables/views being protected, ranked by how sensitive they are
 INSERT INTO resources (resource_id, resource_name, resource_type, sensitivity_level) VALUES
