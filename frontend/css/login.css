@@ -141,6 +141,26 @@ body {
     background: var(--green);
 }
 
+.home-button {
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 24px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.home-button:hover {
+    color: var(--dark);
+}
+
 
 /* =========================================================
    BRAND

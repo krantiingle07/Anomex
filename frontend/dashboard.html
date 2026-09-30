@@ -14,36 +14,1254 @@
 
 <body>
 
-    <main class="dashboard">
+    <div class="app-shell">
 
-        <header class="dashboard-header">
+        <!-- =========================
+             SIDEBAR
+        ========================== -->
 
-            <div>
-                <h1>Anomex</h1>
-                <p>Database Security Dashboard</p>
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-brand">
+
+                <div class="sidebar-logo">
+                    <img
+                        src="../images/Anomex_logo2.png"
+                        alt="Anomex Logo"
+                    >
+                </div>
+
+                <div>
+                    <h1>ANOMEX</h1>
+                    <span>Security Console</span>
+                </div>
+
             </div>
 
-            <button id="logoutButton" class="logout-button">
-                Logout
-            </button>
 
-        </header>
+            <nav class="sidebar-nav">
 
-        <section class="welcome">
+                <p class="nav-label">MAIN</p>
 
-            <p class="eyebrow">SECURITY CONSOLE</p>
+                <button
+                    class="nav-item active"
+                    data-section="overview"
+                    type="button"
+                >
+                    <span class="nav-icon">▦</span>
+                    <span>Overview</span>
+                </button>
 
-            <h2 id="welcomeText">
-                Loading...
-            </h2>
 
-            <p id="userDetails">
-                Checking authentication...
-            </p>
+                <button
+                    class="nav-item"
+                    data-section="queries"
+                    type="button"
+                >
+                    <span class="nav-icon">⌕</span>
+                    <span>Query Monitoring</span>
+                </button>
 
-        </section>
 
-    </main>
+                <button
+                    class="nav-item"
+                    data-section="anomalies"
+                    type="button"
+                >
+                    <span class="nav-icon">△</span>
+                    <span>Anomaly Detection</span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-section="alerts"
+                    type="button"
+                >
+                    <span class="nav-icon">!</span>
+                    <span>Security Alerts</span>
+                </button>
+
+
+                <p class="nav-label">ACCESS CONTROL</p>
+
+
+                <button
+                    class="nav-item"
+                    data-section="users"
+                    type="button"
+                >
+                    <span class="nav-icon">♙</span>
+                    <span>Users</span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-section="roles"
+                    type="button"
+                >
+                    <span class="nav-icon">◈</span>
+                    <span>Roles</span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-section="audit"
+                    type="button"
+                >
+                    <span class="nav-icon">▤</span>
+                    <span>Audit Logs</span>
+                </button>
+
+
+                <p class="nav-label">SYSTEM</p>
+
+
+                <button
+                    class="nav-item"
+                    data-section="settings"
+                    type="button"
+                >
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-footer">
+
+                <div class="sidebar-user">
+
+                    <div
+                        class="user-avatar"
+                        id="sidebarAvatar"
+                    >
+                        A
+                    </div>
+
+                    <div class="sidebar-user-info">
+
+                        <strong id="sidebarUsername">
+                            Loading...
+                        </strong>
+
+                        <span id="sidebarRole">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="logoutButton"
+                    class="sidebar-logout"
+                    type="button"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =========================
+             MAIN CONTENT
+        ========================== -->
+
+        <main class="main-content">
+
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <button
+                        class="mobile-menu-button"
+                        id="mobileMenuButton"
+                        type="button"
+                    >
+                        ☰
+                    </button>
+
+                    <div class="topbar-heading">
+
+                        <span class="topbar-eyebrow">
+                            SECURITY CONSOLE
+                        </span>
+
+                        <h2 id="pageTitle">
+                            Overview
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="topbar-actions">
+
+                    <button
+                        class="icon-button"
+                        id="refreshButton"
+                        type="button"
+                        title="Refresh dashboard"
+                    >
+                        ↻
+                    </button>
+
+
+                    <button
+                        class="icon-button notification-button"
+                        id="notificationButton"
+                        type="button"
+                        title="Security alerts"
+                    >
+                        ◇
+                        <span
+                            id="notificationCount"
+                            class="notification-count"
+                        >
+                            0
+                        </span>
+                    </button>
+
+
+                    <!-- Clickable user area -->
+
+                    <button
+                        class="user-profile-button"
+                        id="userProfileButton"
+                        type="button"
+                        aria-label="Open user profile"
+                    >
+
+                        <div
+                            class="user-avatar"
+                            id="topbarAvatar"
+                        >
+                            A
+                        </div>
+
+                        <div class="topbar-user-text">
+
+                            <strong id="topbarUsername">
+                                Loading...
+                            </strong>
+
+                            <span id="topbarDepartment">
+                                Loading...
+                            </span>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- =========================
+                 USER PROFILE CARD
+            ========================== -->
+
+            <div
+                class="profile-card"
+                id="profileCard"
+            >
+
+                <div class="profile-card-header">
+
+                    <div
+                        class="profile-large-avatar"
+                        id="profileAvatar"
+                    >
+                        A
+                    </div>
+
+                    <div>
+
+                        <strong id="profileUsername">
+                            Loading...
+                        </strong>
+
+                        <span id="profileRole">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-card-body">
+
+                    <div class="profile-detail">
+
+                        <span>
+                            Department
+                        </span>
+
+                        <strong id="profileDepartment">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-detail">
+
+                        <span>
+                            User ID
+                        </span>
+
+                        <strong id="profileUserId">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-detail">
+
+                        <span>
+                            Role
+                        </span>
+
+                        <strong id="profileRoleDetail">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="profile-detail">
+
+                        <span>
+                            Session
+                        </span>
+
+                        <strong class="profile-session-status">
+                            Active
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="profile-logout-button"
+                    id="profileLogoutButton"
+                    type="button"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+
+            <!-- =========================
+                 PAGE CONTENT
+            ========================== -->
+
+            <div class="content-area">
+
+
+                <!-- OVERVIEW -->
+
+                <section
+                    class="dashboard-section active"
+                    id="section-overview"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Security Overview
+                            </h3>
+
+                            <p>
+                                Monitor database activity,
+                                access behavior and detected anomalies.
+                            </p>
+
+                        </div>
+
+                        <div class="status-indicator">
+
+                            <span></span>
+
+                            System Active
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- KPI CARDS -->
+
+                    <div class="kpi-grid">
+
+                        <article class="kpi-card">
+
+                            <div class="kpi-header">
+                                <span>Total Queries</span>
+                                <span class="kpi-icon">⌕</span>
+                            </div>
+
+                            <strong id="totalQueries">
+                                —
+                            </strong>
+
+                            <small>
+                                Recorded query activity
+                            </small>
+
+                        </article>
+
+
+                        <article class="kpi-card">
+
+                            <div class="kpi-header">
+                                <span>Anomalies</span>
+                                <span class="kpi-icon warning">△</span>
+                            </div>
+
+                            <strong id="totalAnomalies">
+                                —
+                            </strong>
+
+                            <small>
+                                Detected by ML analysis
+                            </small>
+
+                        </article>
+
+
+                        <article class="kpi-card">
+
+                            <div class="kpi-header">
+                                <span>Security Alerts</span>
+                                <span class="kpi-icon alert">!</span>
+                            </div>
+
+                            <strong id="totalAlerts">
+                                —
+                            </strong>
+
+                            <small>
+                                Unacknowledged alerts
+                            </small>
+
+                        </article>
+
+
+                        <article class="kpi-card">
+
+                            <div class="kpi-header">
+                                <span>Users</span>
+                                <span class="kpi-icon">♙</span>
+                            </div>
+
+                            <strong id="totalUsers">
+                                —
+                            </strong>
+
+                            <small>
+                                Registered database users
+                            </small>
+
+                        </article>
+
+                    </div>
+
+
+                    <!-- QUERY ACTIVITY + CONTROLS -->
+
+                    <div class="dashboard-grid">
+
+                        <article class="panel large-panel">
+
+                            <div class="panel-header">
+
+                                <div>
+
+                                    <h3>
+                                        Query Activity
+                                    </h3>
+
+                                    <p>
+                                        Recent database query activity
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    class="panel-action"
+                                    data-section-target="queries"
+                                    type="button"
+                                >
+                                    View all
+                                </button>
+
+                            </div>
+
+
+                            <div class="activity-summary">
+
+                                <div class="activity-stat">
+
+                                    <span class="activity-dot success"></span>
+
+                                    <div>
+
+                                        <strong id="successfulQueries">
+                                            —
+                                        </strong>
+
+                                        <small>
+                                            Successful
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="activity-stat">
+
+                                    <span class="activity-dot failure"></span>
+
+                                    <div>
+
+                                        <strong id="failedQueries">
+                                            —
+                                        </strong>
+
+                                        <small>
+                                            Failed
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="activity-stat">
+
+                                    <span class="activity-dot blocked"></span>
+
+                                    <div>
+
+                                        <strong id="blockedQueries">
+                                            —
+                                        </strong>
+
+                                        <small>
+                                            Blocked
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="table-wrapper">
+
+                                <table>
+
+                                    <thead>
+
+                                        <tr>
+                                            <th>Query</th>
+                                            <th>Resource</th>
+                                            <th>Status</th>
+                                            <th>Time</th>
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody id="overviewQueryTable">
+
+                                        <tr>
+
+                                            <td
+                                                colspan="4"
+                                                class="table-empty"
+                                            >
+                                                Loading query activity...
+                                            </td>
+
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="panel security-panel">
+
+                            <div class="panel-header">
+
+                                <div>
+
+                                    <h3>
+                                        Security Controls
+                                    </h3>
+
+                                    <p>
+                                        Current system state
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="control-list">
+
+                                <div class="control-item">
+
+                                    <div>
+
+                                        <strong>
+                                            Authentication
+                                        </strong>
+
+                                        <span>
+                                            Session authentication active
+                                        </span>
+
+                                    </div>
+
+                                    <span class="control-status">
+                                        Active
+                                    </span>
+
+                                </div>
+
+
+                                <div class="control-item">
+
+                                    <div>
+
+                                        <strong>
+                                            Anomaly Detection
+                                        </strong>
+
+                                        <span>
+                                            Isolation Forest analysis
+                                        </span>
+
+                                    </div>
+
+                                    <span class="control-status">
+                                        Active
+                                    </span>
+
+                                </div>
+
+
+                                <div class="control-item">
+
+                                    <div>
+
+                                        <strong>
+                                            Query Monitoring
+                                        </strong>
+
+                                        <span>
+                                            Database activity logging
+                                        </span>
+
+                                    </div>
+
+                                    <span class="control-status">
+                                        Active
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </article>
+
+                    </div>
+
+
+                    <!-- RECENT DATA -->
+
+                    <div class="dashboard-grid">
+
+                        <article class="panel">
+
+                            <div class="panel-header">
+
+                                <div>
+
+                                    <h3>
+                                        Recent Anomalies
+                                    </h3>
+
+                                    <p>
+                                        Latest detected behavioral anomalies
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    class="panel-action"
+                                    data-section-target="anomalies"
+                                    type="button"
+                                >
+                                    View all
+                                </button>
+
+                            </div>
+
+
+                            <div
+                                id="recentAnomalies"
+                                class="anomaly-list"
+                            >
+
+                                <div class="loading-state">
+                                    Loading anomalies...
+                                </div>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="panel">
+
+                            <div class="panel-header">
+
+                                <div>
+
+                                    <h3>
+                                        Recent Query Activity
+                                    </h3>
+
+                                    <p>
+                                        Latest recorded queries
+                                    </p>
+
+                                </div>
+
+                                <button
+                                    class="panel-action"
+                                    data-section-target="queries"
+                                    type="button"
+                                >
+                                    View all
+                                </button>
+
+                            </div>
+
+
+                            <div
+                                id="recentQueries"
+                                class="recent-query-list"
+                            >
+
+                                <div class="loading-state">
+                                    Loading queries...
+                                </div>
+
+                            </div>
+
+                        </article>
+
+                    </div>
+
+                </section>
+
+
+                <!-- QUERY MONITORING -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-queries"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Query Monitoring
+                            </h3>
+
+                            <p>
+                                Review recorded database query activity.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel">
+
+                        <div class="table-wrapper">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Query</th>
+                                        <th>Resource</th>
+                                        <th>Execution</th>
+                                        <th>Status</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="queryTable">
+
+                                    <tr>
+
+                                        <td
+                                            colspan="7"
+                                            class="table-empty"
+                                        >
+                                            Loading query logs...
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- ANOMALY DETECTION -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-anomalies"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Anomaly Detection
+                            </h3>
+
+                            <p>
+                                Machine-learning detections generated
+                                from query behavior.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel">
+
+                        <div class="table-wrapper">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Alert</th>
+                                        <th>Log ID</th>
+                                        <th>Type</th>
+                                        <th>Severity</th>
+                                        <th>Score</th>
+                                        <th>Description</th>
+                                        <th>Detected</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="anomalyTable">
+
+                                    <tr>
+
+                                        <td
+                                            colspan="7"
+                                            class="table-empty"
+                                        >
+                                            Loading anomaly alerts...
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- SECURITY ALERTS -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-alerts"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Security Alerts
+                            </h3>
+
+                            <p>
+                                Review detected security events
+                                and their severity.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel">
+
+                        <div
+                            id="alertList"
+                            class="alert-list"
+                        >
+
+                            <div class="loading-state">
+                                Loading security alerts...
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- USERS -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-users"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Users
+                            </h3>
+
+                            <p>
+                                Registered users and access information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel">
+
+                        <div class="table-wrapper">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Department</th>
+                                        <th>Status</th>
+                                        <th>Role</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="userTable">
+
+                                    <tr>
+
+                                        <td
+                                            colspan="5"
+                                            class="table-empty"
+                                        >
+                                            Loading users...
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- ROLES -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-roles"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Roles
+                            </h3>
+
+                            <p>
+                                Database roles and their permission levels.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel">
+
+                        <div class="table-wrapper">
+
+                            <table>
+
+                                <thead>
+
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Role</th>
+                                        <th>Permission Level</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="roleTable">
+
+                                    <tr>
+
+                                        <td
+                                            colspan="3"
+                                            class="table-empty"
+                                        >
+                                            Loading roles...
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- AUDIT LOGS -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-audit"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Audit Logs
+                            </h3>
+
+                            <p>
+                                Audit-log storage is not currently
+                                present in the database schema.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel empty-panel">
+
+                        <div class="empty-icon">
+                            ▤
+                        </div>
+
+                        <h3>
+                            Audit Logs Not Available
+                        </h3>
+
+                        <p>
+                            The current Anomex database does not contain
+                            an <code>audit_log</code> table.
+                            Query activity is recorded in
+                            <code>query_logs</code>, while detected
+                            security events are stored in
+                            <code>anomaly_alerts</code>.
+                        </p>
+
+                    </article>
+
+                </section>
+
+
+                <!-- SETTINGS -->
+
+                <section
+                    class="dashboard-section"
+                    id="section-settings"
+                >
+
+                    <div class="section-intro">
+
+                        <div>
+
+                            <h3>
+                                Settings
+                            </h3>
+
+                            <p>
+                                Application configuration and system information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <article class="panel settings-panel">
+
+                        <div class="setting-row">
+
+                            <div>
+
+                                <strong>
+                                    Application
+                                </strong>
+
+                                <span>
+                                    Anomex Intelligent Database
+                                    Security System
+                                </span>
+
+                            </div>
+
+                            <span class="setting-value">
+                                Active
+                            </span>
+
+                        </div>
+
+
+                        <div class="setting-row">
+
+                            <div>
+
+                                <strong>
+                                    Detection Engine
+                                </strong>
+
+                                <span>
+                                    Isolation Forest
+                                </span>
+
+                            </div>
+
+                            <span class="setting-value">
+                                ML
+                            </span>
+
+                        </div>
+
+
+                        <div class="setting-row">
+
+                            <div>
+
+                                <strong>
+                                    Database
+                                </strong>
+
+                                <span>
+                                    MySQL — access_control_db
+                                </span>
+
+                            </div>
+
+                            <span class="setting-value">
+                                Connected
+                            </span>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <div
+        class="mobile-overlay"
+        id="mobileOverlay"
+    ></div>
+
 
     <script src="js/dashboard.js"></script>
 
