@@ -1027,7 +1027,8 @@ async function loadDashboard() {
             queryLogs,
             anomalies,
             users,
-            roles
+            roles,
+            stats
         ] = await Promise.all([
 
             fetchAPI(
@@ -1044,54 +1045,36 @@ async function loadDashboard() {
 
             fetchAPI(
                 "/api/roles"
+            ),
+
+            fetchAPI(
+                "/api/dashboard-stats"
             )
 
         ]);
 
+        // Update statistics with API data
+        document.getElementById("totalQueries").textContent = stats.total_queries || 0;
+        document.getElementById("totalAnomalies").textContent = stats.total_anomalies || 0;
+        document.getElementById("totalAlerts").textContent = stats.unacknowledged_alerts || 0;
+        document.getElementById("totalUsers").textContent = users.length;
+        document.getElementById("successfulQueries").textContent = 
+            queryLogs.filter(log => log.status === "SUCCESS").length;
+        document.getElementById("failedQueries").textContent = stats.failed_queries || 0;
+        document.getElementById("blockedQueries").textContent = 
+            queryLogs.filter(log => log.status === "BLOCKED").length;
+        
+        const unacknowledged = anomalies.filter(alert => !alert.acknowledged).length;
+        notificationCount.textContent = unacknowledged;
 
-        updateStatistics(
-            queryLogs,
-            anomalies,
-            users
-        );
-
-
-        renderOverviewQueries(
-            queryLogs
-        );
-
-        renderQueryTable(
-            queryLogs
-        );
-
-
-        renderRecentAnomalies(
-            anomalies
-        );
-
-        renderAnomalyTable(
-            anomalies
-        );
-
-
-        renderAlerts(
-            anomalies
-        );
-
-
-        renderRecentQueries(
-            queryLogs
-        );
-
-
-        renderUsers(
-            users
-        );
-
-
-        renderRoles(
-            roles
-        );
+        renderOverviewQueries(queryLogs);
+        renderQueryTable(queryLogs);
+        renderRecentAnomalies(anomalies);
+        renderAnomalyTable(anomalies);
+        renderAlerts(anomalies);
+        renderRecentQueries(queryLogs);
+        renderUsers(users);
+        renderRoles(roles);
 
 
     } catch (error) {

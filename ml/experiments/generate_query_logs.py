@@ -14,41 +14,36 @@ from backend.database.connection import get_connection
 USERS = [1, 2, 3, 4]
 
 NORMAL_QUERIES = [
-    ("SELECT * FROM users", "users", 25),
-    ("SELECT user_id, username FROM users", "users", 30),
-    ("SELECT * FROM roles", "roles", 20),
-    ("SELECT * FROM query_logs WHERE user_id = 1", "query_logs", 35),
-    ("SELECT * FROM resources", "resources", 22),
-    ("SELECT username, department FROM users", "users", 28),
-    ("SELECT * FROM user_roles", "user_roles", 24),
-    ("SELECT * FROM sessions WHERE user_id = 1", "sessions", 27),
-    ("SELECT * FROM anomaly_alerts", "anomaly_alerts", 32),
+    ("SELECT * FROM users", 25),
+    ("SELECT user_id, username FROM users", 30),
+    ("SELECT * FROM roles", 20),
+    ("SELECT * FROM query_logs WHERE user_id = 1", 35),
+    ("SELECT * FROM resources", 22),
+    ("SELECT username, department FROM users", 28),
+    ("SELECT * FROM user_roles", 24),
+    ("SELECT * FROM sessions WHERE user_id = 1", 27),
+    ("SELECT * FROM anomaly_alerts", 32),
 ]
 
 UNUSUAL_QUERIES = [
     (
         "SELECT * FROM users CROSS JOIN query_logs",
-        "users, query_logs",
         3500
     ),
     (
         "SELECT * FROM users WHERE username='admin' OR '1'='1'",
-        "users",
         2800
     ),
     (
         "DELETE FROM users WHERE user_id > 0",
-        "users",
         4200
     ),
     (
         "UPDATE users SET is_active = 0",
-        "users",
         3900
     ),
     (
         "SELECT * FROM query_logs WHERE query_text LIKE '%password%'",
-        "query_logs",
         3000
     ),
 ]
@@ -58,7 +53,6 @@ def insert_log(
     cursor,
     user_id,
     query_text,
-    resource,
     execution_time,
     status,
     error_message,
@@ -71,11 +65,11 @@ def insert_log(
             user_id,
             session_id,
             query_text,
-            resource,
             execution_time_ms,
             status,
             error_message,
-            timestamp
+            timestamp,
+            database_name
         )
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """,
@@ -83,11 +77,11 @@ def insert_log(
             user_id,
             None,
             query_text,
-            resource,
             execution_time,
             status,
             error_message,
-            timestamp
+            timestamp,
+            'access_control_db'
         )
     )
 
@@ -101,7 +95,7 @@ cursor = connection.cursor()
 
 for _ in range(100):
 
-    query_text, resource, base_time = random.choice(NORMAL_QUERIES)
+    query_text, base_time = random.choice(NORMAL_QUERIES)
 
     user_id = random.choice(USERS)
 
@@ -118,7 +112,6 @@ for _ in range(100):
         cursor,
         user_id,
         query_text,
-        resource,
         execution_time,
         "SUCCESS",
         None,
@@ -132,7 +125,7 @@ for _ in range(100):
 
 for _ in range(10):
 
-    query_text, resource, execution_time = random.choice(
+    query_text, execution_time = random.choice(
         UNUSUAL_QUERIES
     )
 
@@ -153,7 +146,6 @@ for _ in range(10):
         cursor,
         user_id,
         query_text,
-        resource,
         execution_time,
         status,
         error_message,

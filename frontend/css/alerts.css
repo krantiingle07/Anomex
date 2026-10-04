@@ -1504,3 +1504,205 @@ footer {
         gap: 7px;
     }
 }
+
+
+/* =========================================================
+   MODAL BODY & FOOTER  (supplements existing modal styles)
+   ========================================================= */
+
+.modal-body {
+
+    padding: 20px;
+
+    color: var(--text);
+}
+
+.modal-body p {
+
+    margin-bottom: 10px;
+
+    font-size: 12px;
+
+    color: var(--text-secondary);
+}
+
+.modal-body strong {
+
+    color: var(--text);
+}
+
+.modal-detail-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    padding: 9px 0;
+
+    border-bottom: 1px solid var(--border);
+
+    font-size: 12px;
+}
+
+.modal-detail-row:last-child {
+
+    border-bottom: none;
+}
+
+.modal-detail-label {
+
+    font-weight: 600;
+
+    color: var(--text-muted);
+
+    min-width: 130px;
+
+    flex-shrink: 0;
+}
+
+.modal-detail-value {
+
+    color: var(--text);
+
+    word-break: break-all;
+}
+
+.modal-query-box {
+
+    margin-top: 14px;
+
+    padding: 13px;
+
+    background: var(--surface-soft);
+
+    border: 1px solid var(--border);
+
+    border-radius: 7px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px;
+
+    color: var(--teal);
+
+    white-space: pre-wrap;
+
+    word-break: break-all;
+}
+
+.modal-footer {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    padding: 14px 20px;
+
+    border-top: 1px solid var(--border);
+}
+
+.modal-close {
+
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: var(--surface-soft);
+
+    color: var(--text-secondary);
+
+    border-radius: 6px;
+
+    font-size: 16px;
+
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+
+    background: var(--danger-bg);
+
+    color: var(--danger);
+}
+
+.btn-primary {
+
+    height: 36px;
+
+    padding: 0 16px;
+
+    background: var(--green);
+
+    color: white;
+
+    border: none;
+
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+
+    background: var(--teal);
+
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+
+    opacity: 0.5;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+.btn-secondary {
+
+    height: 36px;
+
+    padding: 0 16px;
+
+    background: transparent;
+
+    color: var(--text-secondary);
+
+    border: 1px solid var(--border);
+
+    border-radius: 7px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+
+    background: var(--surface-soft);
+}
+
+
+/* TOAST SUCCESS / DANGER VARIANTS */
+
+.toast.danger {
+
+    border-left-color: var(--danger);
+}

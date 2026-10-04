@@ -133,7 +133,36 @@ monitoring, auditing, and anomaly detection.
 
 ## 📊 ER Diagram
 
-![ANOMEX ER Diagram](images/AnomexER.jpg)
+![ANOMEX ER Diagram](frontend/images/AnomexER.jpg)
+
+## Run locally
+
+1. Create and activate a Python virtual environment, then install dependencies:
+
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+
+2. Copy `.env.example` to `.env` and set the local MySQL credentials.
+3. Initialize the application database from the repository root:
+
+   ```powershell
+   cmd /c "mysql -u root -p < sql\init_db.sql"
+   ```
+
+4. Start the API:
+
+   ```powershell
+   python -m backend.app
+   ```
+
+5. Serve the `frontend` folder with a static web server and open `index.html`.
+   The frontend connects to the API at `http://127.0.0.1:5000`.
+
+The initializer creates the application tables but does not insert sample
+accounts. Create an active user with a bcrypt password hash before signing in.
 
 ## ✨ Key Features
 

@@ -33,7 +33,7 @@ VALUES
 ('Finance User', 'Access finance-related resources', 2),
 ('Guest', 'Limited read-only access', 1);
 
--- ---------- USERS ----------
+--- ---------- USERS ----------
 -- 4 sample employees with bcrypt hashed passwords:
 -- alice_admin     -> Admin@123
 -- bob_analyst     -> Analyst@123
@@ -42,10 +42,11 @@ VALUES
 INSERT INTO users
 (username, email, password_hash, department, is_active)
 VALUES
-('alice_admin', 'alice@anomex.local', '$2b$12$HyVqgB.AMUoVk860nS2y1utFaUYX0PPBI.1XyxMBrghmbzTuLieLC', 'IT', 1),
-('bob_analyst', 'bob@anomex.local', '$2b$12$qO8w2nC3MoFNk6jeeIyMtOBhX87OEnNCvWaqjIgHATM42pQR.7Cva', 'Analytics', 1),
-('charlie_finance', 'charlie@anomex.local', '$2b$12$IdRSoIG6d3i9rOptgGBq0.YIwBsCZJQmBSl.zmiViLJmrbU34isve', 'Finance', 1),
-('diana_guest', 'diana@anomex.local', '$2b$12$BpL9bBxcexbldPqWgyWBJuW3wO7VWcFxNtmFq.lJpXEDdYWZ5tKeK', 'General', 1);
+('alice_admin', 'alice@anomex.local', '$2b$12$H.Q2y47.GWDoaEwuJ8wyXOlEG8EgM5z6X4WjuqHATPXl4y0FYYHCu', 'IT', 1),
+('bob_analyst', 'bob@anomex.local', '$2b$12$OH5lrPbXDGGawjg1PQGfbuDPOIjGv69CDIU1XCZUxofLFVf5cnX9u', 'Analytics', 1),
+('charlie_finance', 'charlie@anomex.local', '$2b$12$dJZ4ZpkR0.nivJEvRojCcuvIweW95f2sqkP36fgKDHYtDdp6jvgIq', 'Finance', 1),
+('diana_guest', 'diana@anomex.local', '$2b$12$gIcGdg01gxSr5gM5.wwm3O7Nj.RgFM5Bre5VbGR/9Ou0TjgqTpYKy', 'General', 1);
+
 -- ---------- RESOURCES ----------
 -- The 4 tables/views being protected, ranked by how sensitive they are
 INSERT INTO resources (resource_id, resource_name, resource_type, sensitivity_level) VALUES
@@ -60,7 +61,7 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 (1, 1), -- alice_admin -> Database Admin
 (2, 2), -- bob_analyst -> Data Analyst
 (3, 3), -- charlie_finance -> Finance User
-(4, 4); -- diana_user -> Guest
+(4, 4); -- diana_guest -> Guest
 
 -- ---------- ROLE_PERMISSIONS ----------
 -- Database Admin: allowed to do everything, on every resource
@@ -195,8 +196,8 @@ INSERT INTO access_policies (policy_id, policy_name, description, rule_type, rul
 -- Links each anomalous log entry to the specific policy it broke
 INSERT INTO policy_violations (violation_id, log_id, policy_id, violation_details) VALUES
 (1, 8,  4, 'Data Analyst (bob_analyst) attempted to access SECRET-level resource employees'),
-(2, 9,  2, 'Guest (diana_user) attempted DELETE on orders'),
+(2, 9,  2, 'Guest (diana_guest) attempted DELETE on orders'),
 (3, 10, 4, 'Finance User (charlie_finance) attempted to access CONFIDENTIAL resource customers'),
 (4, 11, 1, 'bob_analyst ran a bulk SELECT on customers at 2:47 AM'),
 (5, 11, 3, 'Query returned 18,500 rows, exceeding the 10,000 row limit'),
-(6, 12, 4, 'Guest (diana_user) attempted to access SECRET-level resource employees');
+(6, 12, 4, 'Guest (diana_guest) attempted to access SECRET-level resource employees');

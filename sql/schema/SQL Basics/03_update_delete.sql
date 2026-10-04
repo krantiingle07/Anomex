@@ -24,7 +24,7 @@
 
 -- ---------- USERS ----------
 -- Deactivate a user's account instead of deleting their history
-UPDATE users SET is_active = 0 WHERE username = 'diana_user';
+UPDATE users SET is_active = 0 WHERE username = 'diana_guest';
 
 -- Move a user to a different department
 UPDATE users SET department = 'Operations' WHERE username = 'alice_admin';
@@ -53,6 +53,19 @@ UPDATE role_permissions SET operation = 'ALL' WHERE role_id = 3 AND resource_id 
 UPDATE query_logs SET status = 'FAILURE', error_message = 'Connection timeout' WHERE log_id = 7;
 
 -- Archive/Clean up older logs (e.g. logs before Sept 16, 2026)
+-- Remove dependent child rows first so foreign key constraints are not violated.
+DELETE pv FROM policy_violations pv
+JOIN query_logs q ON q.log_id = pv.log_id
+WHERE q.timestamp < '2026-09-16 00:00:00';
+
+DELETE aa FROM anomaly_alerts aa
+JOIN query_logs q ON q.log_id = aa.log_id
+WHERE q.timestamp < '2026-09-16 00:00:00';
+
+DELETE ar FROM accessed_resources ar
+JOIN query_logs q ON q.log_id = ar.log_id
+WHERE q.timestamp < '2026-09-16 00:00:00';
+
 DELETE FROM query_logs WHERE timestamp < '2026-09-16 00:00:00';
 
 -- ---------- ACCESSED_RESOURCES ----------
@@ -81,6 +94,7 @@ UPDATE user_baseline SET avg_queries_per_hour = 5.40, avg_execution_time_ms = 27
 UPDATE access_policies SET is_active = 0 WHERE policy_name = 'Max Rows Per Query';
 
 -- Remove a rule that is no longer needed
+DELETE FROM policy_violations WHERE policy_id = (SELECT policy_id FROM access_policies WHERE policy_name = 'Sensitivity Scope Lock');
 DELETE FROM access_policies WHERE policy_name = 'Sensitivity Scope Lock';
 
 -- ---------- POLICY_VIOLATIONS ----------

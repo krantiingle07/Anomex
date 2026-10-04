@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Anomex Security Alerts Console — filter, review and acknowledge AI-detected database anomalies in real time.">
+
+    <title>Anomex | Security Alerts</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Alerts CSS (1 500 + lines already written) -->
+    <link rel="stylesheet" href="css/alerts.css">
+
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════════════ -->
+
+    <header>
+        <div class="container">
+
+            <div class="topbar">
+
+                <!-- Brand -->
+                <div class="brand">
+                    <div class="logo">AX</div>
+                    <div class="brand-text">
+                        <h1>ANOMEX</h1>
+                        <p>Security Alerts Console</p>
+                    </div>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="header-actions">
+
+                    <a href="dashboard.html" class="theme-toggle" id="backToDashboard">
+                        ← Dashboard
+                    </a>
+
+                    <button class="theme-toggle" id="themeToggle" type="button" title="Toggle dark mode">
+                        <span id="themeIcon">☾</span>
+                        <span id="themeLabel">Dark</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Navigation -->
+            <nav class="main-nav" id="mainNav" aria-label="Main navigation">
+                <a href="dashboard.html" id="navOverview">Overview</a>
+                <a href="alerts.html"    id="navAlerts" class="active">Alerts</a>
+                <a href="dashboard.html#queries" id="navQueries">Query Logs</a>
+            </nav>
+
+
+            <!-- Stat Boxes -->
+            <div class="header-stats">
+
+                <div class="stat-box" id="statTotal">
+                    <div class="stat-label">Total Alerts</div>
+                    <div class="stat-value" id="totalAlertsValue">—</div>
+                </div>
+
+                <div class="stat-box" id="statCritical">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-value" id="criticalValue" style="color: var(--danger);">—</div>
+                </div>
+
+                <div class="stat-box" id="statUnacked">
+                    <div class="stat-label">Unacknowledged</div>
+                    <div class="stat-value" id="unackedValue" style="color: var(--warning);">—</div>
+                </div>
+
+                <div class="stat-box" id="statResolved">
+                    <div class="stat-label">Acknowledged</div>
+                    <div class="stat-value" id="ackedValue" style="color: var(--success);">—</div>
+                </div>
+
+            </div>
+
+        </div>
+    </header>
+
+
+    <!-- ═══════════════════════════════════════════════
+         MAIN
+    ═══════════════════════════════════════════════ -->
+
+    <main>
+        <div class="container">
+
+            <!-- Filter Controls -->
+            <div class="controls" id="filterControls">
+
+                <div class="control-group">
+                    <label for="severityFilter">Severity</label>
+                    <select id="severityFilter">
+                        <option value="">All Severities</option>
+                        <option value="CRITICAL">Critical</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="LOW">Low</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="statusFilter">Status</label>
+                    <select id="statusFilter">
+                        <option value="">All</option>
+                        <option value="false">Unacknowledged</option>
+                        <option value="true">Acknowledged</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="searchInput">Search</label>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search alerts, queries, users…"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button id="refreshBtn" type="button" title="Refresh alerts">
+                    ↻ Refresh
+                </button>
+
+            </div>
+
+
+            <!-- Alert Section -->
+            <section class="alert-section" id="alertSection">
+
+                <div class="section-heading">
+                    <div>
+                        <h2>Security Alerts</h2>
+                        <p class="alert-result" id="alertResultText">Loading…</p>
+                    </div>
+                </div>
+
+                <!-- Alert Cards Container -->
+                <div class="alerts-container" id="alertsContainer">
+
+                    <!-- Loading state -->
+                    <div class="loading" id="loadingState">
+                        <div class="spinner"></div>
+                        <span>Fetching alerts from backend…</span>
+                    </div>
+
+                    <!-- Empty state (hidden by default) -->
+                    <div class="empty-state" id="emptyState" style="display:none;">
+                        <div style="font-size: 2rem;">◇</div>
+                        <h3>No alerts found</h3>
+                        <p>Try adjusting your filters or run the ML pipeline to generate anomaly alerts.</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+
+    <!-- ═══════════════════════════════════════════════
+         ALERT DETAIL MODAL
+    ═══════════════════════════════════════════════ -->
+
+    <div class="modal" id="alertModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Alert Details</h2>
+                <button class="modal-close" id="modalClose" type="button" aria-label="Close modal">✕</button>
+            </div>
+
+            <div class="modal-body" id="modalBody">
+                <!-- Filled dynamically -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancelBtn" type="button">Close</button>
+                <button class="btn-primary"   id="modalAckBtn"    type="button">Acknowledge Alert</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════════ -->
+
+    <footer>
+        <div class="container">
+            © 2026 Anomex · AI-Powered Database Security
+        </div>
+    </footer>
+
+
+    <!-- JavaScript -->
+    <script src="js/alerts.js"></script>
+
+</body>
+</html>
