@@ -13,10 +13,10 @@ def get_all_alerts(severity: str = None, acknowledged: str = None) -> list:
     :param acknowledged: Optional filter — 'true' | 'false'
     """
     connection = get_connection()
-    cursor     = connection.cursor(dictionary=True)
+    cursor = connection.cursor(dictionary=True)
 
     conditions = []
-    params     = []
+    params = []
 
     if severity:
         conditions.append("aa.severity = %s")
@@ -37,7 +37,7 @@ def get_all_alerts(severity: str = None, acknowledged: str = None) -> list:
             aa.severity,
             aa.anomaly_score,
             aa.description,
-            aa.created_at as detected_at,
+            aa.detected_at,
             aa.acknowledged,
             q.user_id,
             q.query_text,
@@ -46,11 +46,12 @@ def get_all_alerts(severity: str = None, acknowledged: str = None) -> list:
         FROM anomaly_alerts aa
         JOIN query_logs q ON aa.log_id = q.log_id
         {where_clause}
-        ORDER BY aa.created_at DESC
+        ORDER BY aa.detected_at DESC
     """
 
     cursor.execute(query, params)
     alerts = cursor.fetchall()
+
     cursor.close()
     connection.close()
 
@@ -65,7 +66,7 @@ def get_all_alerts(severity: str = None, acknowledged: str = None) -> list:
 def acknowledge_alert(alert_id: int) -> int:
     """Marks an alert as acknowledged. Returns number of rows affected."""
     connection = get_connection()
-    cursor     = connection.cursor()
+    cursor = connection.cursor()
 
     cursor.execute(
         """
@@ -75,26 +76,36 @@ def acknowledge_alert(alert_id: int) -> int:
         """,
         (alert_id,)
     )
+
     connection.commit()
     rows = cursor.rowcount
+
     cursor.close()
     connection.close()
+
     return rows
 
 
 def get_dashboard_stats() -> dict:
     """Returns aggregated statistics for the dashboard."""
     connection = get_connection()
-    cursor     = connection.cursor(dictionary=True)
+    cursor = connection.cursor(dictionary=True)
 
     cursor.execute("""
         SELECT
-            (SELECT COUNT(*)  FROM query_logs)                               AS total_queries,
-            (SELECT COUNT(*)  FROM anomaly_alerts)                           AS total_anomalies,
-            (SELECT COUNT(*)  FROM anomaly_alerts WHERE acknowledged = FALSE) AS unacknowledged_alerts,
-            (SELECT COUNT(*)  FROM query_logs WHERE status = 'FAILURE')       AS failed_queries
+            (SELECT COUNT(*) FROM query_logs) AS total_queries,
+            (SELECT COUNT(*) FROM anomaly_alerts) AS total_anomalies,
+            (SELECT COUNT(*)
+             FROM anomaly_alerts
+             WHERE acknowledged = FALSE) AS unacknowledged_alerts,
+            (SELECT COUNT(*)
+             FROM query_logs
+             WHERE status = 'FAILURE') AS failed_queries
     """)
+
     stats = cursor.fetchone()
+
     cursor.close()
     connection.close()
+
     return stats
