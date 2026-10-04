@@ -15,7 +15,7 @@ from backend.database.connection import get_connection
 def get_query_logs(limit: int = 100, offset: int = 0) -> list:
     """Returns paginated query logs ordered by timestamp descending."""
     connection = get_connection()
-    cursor     = connection.cursor(dictionary=True)
+    cursor = connection.cursor(dictionary=True)
 
     cursor.execute(
         """
@@ -24,7 +24,7 @@ def get_query_logs(limit: int = 100, offset: int = 0) -> list:
             user_id,
             session_id,
             query_text,
-            database_name as resource,
+            resource,
             execution_time_ms,
             status,
             error_message,
@@ -35,11 +35,12 @@ def get_query_logs(limit: int = 100, offset: int = 0) -> list:
         """,
         (limit, offset)
     )
+
     logs = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    # Serialise datetime fields
+    # Serialize datetime fields
     for log in logs:
         if log.get("timestamp"):
             log["timestamp"] = log["timestamp"].isoformat()
