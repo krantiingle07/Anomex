@@ -1,34 +1,55 @@
 """
 tests/test_database.py
-Unit tests for the database connection and query log service.
+Unit tests for database connection and query services.
 """
+
 import sys
 from pathlib import Path
 import unittest
 from unittest.mock import MagicMock, patch
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-
 class TestDatabaseConnection(unittest.TestCase):
-    """Tests that get_connection() returns a usable connection object."""
+    """Tests for environment-based MySQL connection configuration."""
 
     @patch("backend.database.connection.mysql.connector.connect")
-    def test_get_connection_called_with_defaults(self, mock_connect):
-        """get_connection() must call mysql.connector.connect with expected args."""
+    @patch.dict("os.environ", {
+        "DB_HOST": "127.0.0.1",
+        "DB_USER": "test_user",
+        "DB_PASSWORD": "test_password",
+        "DB_NAME": "test_db",
+        "DB_PORT": "3307",
+    }, clear=True)
+    def test_get_connection_uses_environment_configuration(self, mock_connect):
+        """Connection must use credentials from environment variables."""
         mock_connect.return_value = MagicMock()
 
         from backend.database.connection import get_connection
         conn = get_connection()
 
-        mock_connect.assert_called_once()
+        mock_connect.assert_called_once_with(
+            host="127.0.0.1",
+            user="test_user",
+            password="test_password",
+            database="test_db",
+            port=3307,
+        )
         self.assertIsNotNone(conn)
 
     @patch("backend.database.connection.mysql.connector.connect")
+    @patch.dict("os.environ", {
+        "DB_HOST": "127.0.0.1",
+        "DB_USER": "test_user",
+        "DB_PASSWORD": "test_password",
+        "DB_NAME": "test_db",
+        "DB_PORT": "3306",
+    }, clear=True)
     def test_get_connection_returns_connection_object(self, mock_connect):
-        """get_connection() must return the connector object."""
+        """Connection must return the MySQL connector object."""
         fake_conn = MagicMock()
         mock_connect.return_value = fake_conn
 
@@ -36,6 +57,17 @@ class TestDatabaseConnection(unittest.TestCase):
         conn = get_connection()
 
         self.assertIs(conn, fake_conn)
+
+    @patch("backend.database.connection.mysql.connector.connect")
+    @patch.dict("os.environ", {}, clear=True)
+    def test_missing_credentials_raise_error(self, mock_connect):
+        """Missing database credentials must not fall back to root."""
+        from backend.database.connection import get_connection
+
+        with self.assertRaises(RuntimeError):
+            get_connection()
+
+        mock_connect.assert_not_called()
 
 
 class TestQueryService(unittest.TestCase):
