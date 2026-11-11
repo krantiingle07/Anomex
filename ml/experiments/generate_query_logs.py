@@ -120,45 +120,53 @@ def load_reference_data(cursor):
     }
 
 def build_lookup_maps(reference_data):
-    """Convert reference records into efficient lookup dictionaries."""
+    """Build lookup maps while preserving every role assigned to a user."""
 
-    users = {
-        user_id: {
-            "username": username,
-            "role_id": role_id,
-            "role_name": role_name
-        }
-        for user_id, username, role_id, role_name
-        in reference_data["users"]
-    }
+    users = {}
+
+    for user_id, username, role_id, role_name in reference_data["users"]:
+        user = users.setdefault(
+            user_id,
+            {
+                "username": username,
+                "role_ids": set(),
+                "role_names": set(),
+            },
+        )
+        user["role_ids"].add(role_id)
+        user["role_names"].add(role_name)
 
     resources = {
         resource_name: resource_id
-        for resource_id, resource_name
-        in reference_data["resources"]
+        for resource_id, resource_name in reference_data["resources"]
     }
 
     permissions = {}
 
-    for role_id, resource_id, can_read, can_write, can_delete \
-            in reference_data["permissions"]:
-
+    for role_id, resource_id, can_read, can_write, can_delete in (
+        reference_data["permissions"]
+    ):
         permissions[(role_id, resource_id)] = {
             "SELECT": bool(can_read),
+            "INSERT": bool(can_write),
             "UPDATE": bool(can_write),
-            "DELETE": bool(can_delete)
+            "DELETE": bool(can_delete),
         }
 
     baselines = {}
 
-    for user_id, avg_queries, avg_execution, preferred_resources, preferred_operations \
-            in reference_data["baselines"]:
-
+    for (
+        user_id,
+        avg_queries,
+        avg_execution,
+        preferred_resources,
+        preferred_operations,
+    ) in reference_data["baselines"]:
         baselines[user_id] = {
             "avg_queries_per_hour": float(avg_queries or 0),
             "avg_execution_time_ms": avg_execution or 0,
             "preferred_resources": json.loads(preferred_resources or "[]"),
-            "preferred_operations": json.loads(preferred_operations or "[]")
+            "preferred_operations": json.loads(preferred_operations or "[]"),
         }
 
     return {
@@ -166,11 +174,11 @@ def build_lookup_maps(reference_data):
         "resources": resources,
         "permissions": permissions,
         "baselines": baselines,
-        "policies": reference_data["policies"]
+        "policies": reference_data["policies"],
     }
 
 def has_permission(data, user_id, resource_name, operation):
-    """Check whether a user can perform an operation on a resource."""
+    """Check effective permissions across all roles assigned to a user."""
 
     user = data["users"].get(user_id)
 
@@ -182,14 +190,13 @@ def has_permission(data, user_id, resource_name, operation):
     if resource_id is None:
         return False
 
-    permission = data["permissions"].get(
-        (user["role_id"], resource_id)
+    # A grant from any assigned role grants the operation.
+    return any(
+        data["permissions"].get((role_id, resource_id), {}).get(
+            operation, False
+        )
+        for role_id in user["role_ids"]
     )
-
-    if not permission:
-        return False
-
-    return permission.get(operation, False)
 
 def is_normal_behavior(data, user_id, resource_name, operation):
     """Check whether activity matches the user's behavioral baseline."""
@@ -279,13 +286,19 @@ def build_query_text(operation, resource_name, rng):
             f"SELECT * FROM {resource_name}",
             f"SELECT COUNT(*) FROM {resource_name}",
             f"SELECT * FROM {resource_name} LIMIT 100",
-            f"SELECT * FROM {resource_name} WHERE id = {rng.randint(1, 500)}"
+            f"SELECT * FROM {resource_name} WHERE id = {rng.randint(1, 500)}",
+        ]
+
+    elif operation == "INSERT":
+        templates = [
+            f"INSERT INTO {resource_name} (id, status) VALUES ({rng.randint(1, 500)}, 'new')",
+            f"INSERT INTO {resource_name} (id, status) VALUES ({rng.randint(501, 1000)}, 'pending')",
         ]
 
     elif operation == "UPDATE":
         templates = [
             f"UPDATE {resource_name} SET status = 'updated' WHERE id = {rng.randint(1, 500)}",
-            f"UPDATE {resource_name} SET updated_at = CURRENT_TIMESTAMP WHERE id = {rng.randint(1, 500)}"
+            f"UPDATE {resource_name} SET updated_at = CURRENT_TIMESTAMP WHERE id = {rng.randint(1, 500)}",
         ]
 
     elif operation == "DELETE":
@@ -305,13 +318,19 @@ def build_anomalous_query(anomaly_type, resource_name, rng, operation=None):
         return f"SELECT * FROM {resource_name}"
 
     elif anomaly_type == "PRIVILEGE_ESCALATION":
+        if operation == "INSERT":
+            return (
+                f"INSERT INTO {resource_name} (id, status) "
+                "VALUES (1, 'unauthorized')"
+            )
+
         if operation == "UPDATE":
             return (
                 f"UPDATE {resource_name} "
                 "SET status = 'modified' WHERE id = 1"
             )
 
-        elif operation == "DELETE":
+        if operation == "DELETE":
             return f"DELETE FROM {resource_name} WHERE id = 1"
 
         raise ValueError("Invalid privilege escalation operation.")
@@ -332,13 +351,12 @@ def build_anomalous_query(anomaly_type, resource_name, rng, operation=None):
         return f"SELECT * FROM {resource_name} LIMIT 20000"
 
     elif anomaly_type == "BEHAVIORAL_DEVIATION":
-        if operation not in ("SELECT", "UPDATE", "DELETE"):
+        if operation not in ("SELECT", "INSERT", "UPDATE", "DELETE"):
             raise ValueError("Invalid behavioral deviation operation.")
 
         return build_query_text(operation, resource_name, rng)
 
     raise ValueError("Unsupported anomaly type: " + anomaly_type)
-
 
 def get_anomaly_candidates(data):
     """Identify possible unauthorized and unusual user activities."""
@@ -349,24 +367,18 @@ def get_anomaly_candidates(data):
         "BEHAVIORAL_DEVIATION": [],
         "SUSPICIOUS_QUERY": [],
         "OFF_HOURS_BULK_ACCESS": [],
-        "ROW_LIMIT_EXCEEDED": []
+        "ROW_LIMIT_EXCEEDED": [],
     }
 
-    for user_id, user in data["users"].items():
-
+    for user_id in data["users"]:
         for resource_name in data["resources"]:
 
-            # Resource access without SELECT permission
-            if not has_permission(
-                data, user_id, resource_name, "SELECT"
-            ):
+            if not has_permission(data, user_id, resource_name, "SELECT"):
                 candidates["UNAUTHORIZED_ACCESS"].append(
                     (user_id, resource_name, "SELECT")
                 )
 
-            # Operations exceeding role permissions
-            for operation in ("UPDATE", "DELETE"):
-
+            for operation in ("INSERT", "UPDATE", "DELETE"):
                 if not has_permission(
                     data, user_id, resource_name, operation
                 ):
@@ -374,13 +386,9 @@ def get_anomaly_candidates(data):
                         (user_id, resource_name, operation)
                     )
 
-            # Authorized activity outside behavioral preferences
-            for operation in ("SELECT", "UPDATE", "DELETE"):
-
+            for operation in ("SELECT", "INSERT", "UPDATE", "DELETE"):
                 if (
-                    has_permission(
-                        data, user_id, resource_name, operation
-                    )
+                    has_permission(data, user_id, resource_name, operation)
                     and not is_normal_behavior(
                         data, user_id, resource_name, operation
                     )
@@ -389,21 +397,13 @@ def get_anomaly_candidates(data):
                         (user_id, resource_name, operation)
                     )
 
-    for user_id in data["users"]:
-
-        for resource_name in data["resources"]:
-
-            if has_permission(
-                data, user_id, resource_name, "SELECT"
-            ):
+            if has_permission(data, user_id, resource_name, "SELECT"):
                 candidates["SUSPICIOUS_QUERY"].append(
                     (user_id, resource_name, "SELECT")
                 )
-
                 candidates["OFF_HOURS_BULK_ACCESS"].append(
                     (user_id, resource_name, "SELECT")
                 )
-
                 candidates["ROW_LIMIT_EXCEEDED"].append(
                     (user_id, resource_name, "SELECT")
                 )
@@ -414,27 +414,21 @@ def generate_normal_metrics(data, user_id, operation, rng):
     """Generate realistic execution time and rows affected."""
 
     baseline = data["baselines"][user_id]
-
     avg_execution = baseline["avg_execution_time_ms"]
 
     execution_time = max(
         1,
-        int(avg_execution * rng.uniform(0.75, 1.35))
+        int(avg_execution * rng.uniform(0.75, 1.35)),
     )
 
     if operation == "SELECT":
         rows_affected = rng.randint(1, 200)
-
-    elif operation == "UPDATE":
+    elif operation in ("INSERT", "UPDATE"):
         rows_affected = rng.randint(1, 30)
-
     elif operation == "DELETE":
         rows_affected = rng.randint(1, 10)
-
     else:
-        raise ValueError(
-            f"Unsupported operation: {operation}"
-        )
+        raise ValueError(f"Unsupported operation: {operation}")
 
     return execution_time, rows_affected
 
