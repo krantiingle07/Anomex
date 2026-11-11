@@ -13,7 +13,7 @@ def create_features(df):
 
     # Time features
     data["hour"] = data["timestamp"].dt.hour
-    data["day_of_week"] = data["timestamp"].dt.dayofweek
+    data["day_of_week"] = data["timestamp"].dt.day_of_week
 
     # Failure indicator
     data["is_failure"] = (
