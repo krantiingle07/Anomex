@@ -64,3 +64,114 @@ class TestApiRoutes(unittest.TestCase):
             headers={"Session-ID": "valid-session"},
         )
         self.assertEqual(response.status_code, 200)
+
+    @patch("backend.routes.ingestion.os.getenv", return_value=None)
+    def test_ingestion_returns_503_when_api_key_is_not_configured(self, _mock_env):
+        response = self.client.post(
+            "/api/ingest/events",
+            json={"source": "APPLICATION"},
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(response.get_json()["success"])
+
+    @patch("backend.routes.ingestion.os.getenv", return_value="test-secret")
+    def test_ingestion_rejects_missing_or_invalid_api_key(self, _mock_env):
+        for headers in ({}, {"X-API-Key": "wrong-secret"}):
+            with self.subTest(headers=headers):
+                response = self.client.post(
+                    "/api/ingest/events",
+                    json={"source": "APPLICATION"},
+                    headers=headers,
+                )
+
+                self.assertEqual(response.status_code, 401)
+
+    @patch("backend.routes.ingestion.os.getenv", return_value="test-secret")
+    def test_ingestion_rejects_invalid_json_body(self, _mock_env):
+        response = self.client.post(
+            "/api/ingest/events",
+            data="not-json",
+            content_type="application/json",
+            headers={"X-API-Key": "test-secret"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["message"],
+            "Request body must be a JSON object.",
+        )
+
+    @patch("backend.routes.ingestion.os.getenv", return_value="test-secret")
+    @patch(
+        "backend.routes.ingestion.ingest_event",
+        return_value={
+            "log_id": 42,
+            "duplicate": False,
+            "detection": {},
+            "alerts_persisted": 0,
+        },
+    )
+    def test_ingestion_accepts_authenticated_event(
+        self, mock_ingest, _mock_env
+    ):
+        event = {
+            "source": "APPLICATION",
+            "source_event_id": "api-test-001",
+        }
+
+        response = self.client.post(
+            "/api/ingest/events",
+            json=event,
+            headers={"X-API-Key": "test-secret"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["success"])
+        self.assertEqual(response.get_json()["log_id"], 42)
+        mock_ingest.assert_called_once_with(event)
+
+    @patch("backend.routes.ingestion.os.getenv", return_value="test-secret")
+    @patch(
+        "backend.routes.ingestion.ingest_event",
+        side_effect=RuntimeError("Sensitive internal database details"),
+    )
+    def test_ingestion_hides_internal_errors(
+        self, _mock_ingest, _mock_env
+    ):
+        response = self.client.post(
+            "/api/ingest/events",
+            json={"source": "APPLICATION"},
+            headers={"X-API-Key": "test-secret"},
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.get_json()["message"],
+            "Event ingestion failed.",
+        )
+        self.assertNotIn(
+            "Sensitive internal database details",
+            response.get_data(as_text=True),
+        )
+
+
+    @patch("backend.routes.ingestion.os.getenv", return_value="test-secret")
+    @patch(
+        "backend.routes.ingestion.ingest_event",
+        side_effect=__import__(
+            "backend.services.ingestion_service",
+            fromlist=["EventConflictError"],
+        ).EventConflictError("Conflicting event payload."),
+    )
+    def test_ingestion_returns_409_for_event_conflict(
+        self, _mock_ingest, _mock_env
+    ):
+        response = self.client.post(
+            "/api/ingest/events",
+            json={"source": "APPLICATION"},
+            headers={"X-API-Key": "test-secret"},
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertFalse(response.get_json()["success"])

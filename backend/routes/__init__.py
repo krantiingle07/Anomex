@@ -31,3 +31,6 @@ def register_blueprints(app):
     app.register_blueprint(alerts_bp,  url_prefix="/api")
     app.register_blueprint(queries_bp, url_prefix="/api")
     app.register_blueprint(users_bp,   url_prefix="/api")
+    app.register_blueprint(ingestion_bp, url_prefix="/api")
+
+from .ingestion import ingestion_bp

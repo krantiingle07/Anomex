@@ -58,6 +58,7 @@ CREATE TABLE `anomaly_alerts` (
   `alert_id` int NOT NULL AUTO_INCREMENT,
   `log_id` int NOT NULL,
   `alert_type` enum('BEHAVIORAL','POLICY_VIOLATION','THRESHOLD_EXCEEDED') NOT NULL,
+  `detection_source` varchar(30) DEFAULT NULL,
   `severity` enum('LOW','MEDIUM','HIGH','CRITICAL') NOT NULL,
   `anomaly_score` decimal(5,4) DEFAULT NULL,
   `description` text,
@@ -66,6 +67,7 @@ CREATE TABLE `anomaly_alerts` (
   `acknowledged_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`alert_id`),
   KEY `idx_anomaly_alerts_log_id` (`log_id`),
+  UNIQUE KEY `uq_alert_log_detection_source` (`log_id`,`detection_source`),
   CONSTRAINT `anomaly_alerts_ibfk_1` FOREIGN KEY (`log_id`) REFERENCES `query_logs` (`log_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

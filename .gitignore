@@ -18,3 +18,7 @@ env/
 .idea/
 .vscode/
 .ipynb_checkpoints/
+
+# Locally trained Anomex model artifacts
+ml/models/artifacts/
+*.joblib

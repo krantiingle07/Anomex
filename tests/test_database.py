@@ -168,6 +168,46 @@ class TestAlertService(unittest.TestCase):
         self.assertIn("unacknowledged_alerts", stats)
         self.assertIn("total_anomalies",       stats)
 
+class TestIngestionFingerprintMigration(unittest.TestCase):
+
+    def test_adds_fingerprint_column_when_missing(self):
+        from backend.database.migrate import (
+            migration_006_add_ingestion_event_fingerprint,
+        )
+
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchone.return_value = (0,)
+
+        migration_006_add_ingestion_event_fingerprint(connection)
+
+        self.assertEqual(cursor.execute.call_count, 2)
+
+        alter_sql = cursor.execute.call_args_list[1][0][0]
+        self.assertIn("ADD COLUMN event_fingerprint CHAR(64)", alter_sql)
+
+        cursor.close.assert_called_once()
+
+    def test_skips_existing_fingerprint_column(self):
+        from backend.database.migrate import (
+            migration_006_add_ingestion_event_fingerprint,
+        )
+
+        connection = MagicMock()
+        cursor = connection.cursor.return_value
+        cursor.fetchone.return_value = (1,)
+
+        migration_006_add_ingestion_event_fingerprint(connection)
+
+        self.assertEqual(cursor.execute.call_count, 1)
+        cursor.close.assert_called_once()
+
+    def test_migration_006_is_registered(self):
+        from backend.database.migrate import MIGRATIONS
+
+        versions = [migration[0] for migration in MIGRATIONS]
+
+        self.assertIn("006", versions)
 
 if __name__ == "__main__":
     unittest.main()
