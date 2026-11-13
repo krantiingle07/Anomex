@@ -22,14 +22,38 @@ class TestApiRoutes(unittest.TestCase):
 
     @patch("backend.routes.get_session_user", return_value={"user_id": 1})
     @patch("backend.routes.queries.get_query_logs", return_value=[])
-    def test_query_logs_accept_valid_pagination(self, mock_logs, _mock_session):
+    @patch(
+        "backend.routes.queries.get_user_permissions",
+        return_value={
+            "is_admin": False,
+            "resources": {
+                "customers": {
+                    "can_read": True,
+                    "can_write": False,
+                    "can_delete": False,
+                }
+            },
+        },
+    )
+    def test_query_logs_accept_valid_pagination(
+        self, mock_permissions, mock_logs, _mock_session
+    ):
         response = self.client.get(
             "/api/query-logs?limit=25&offset=10",
             headers={"Session-ID": "valid-session"},
         )
 
         self.assertEqual(response.status_code, 200)
-        mock_logs.assert_called_once_with(limit=25, offset=10)
+
+        mock_permissions.assert_called_once_with(1)
+        mock_logs.assert_called_once_with(
+            limit=25,
+            offset=10,
+            user_id=1,
+            allowed_resources=["customers"],
+            is_admin=False,
+        )
+
 
     @patch("backend.routes.get_session_user", return_value={"user_id": 1})
     @patch("backend.routes.queries.get_query_logs")

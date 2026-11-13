@@ -96,7 +96,10 @@ class TestQueryService(unittest.TestCase):
         mock_connect.return_value = fake_conn
 
         from backend.services.query_service import get_query_logs
-        logs = get_query_logs(limit=10, offset=0)
+        logs = get_query_logs(
+                user_id=1,
+                allowed_resources=["customers"],
+            )
 
         self.assertIsInstance(logs, list)
         self.assertEqual(len(logs), 1)
@@ -111,7 +114,10 @@ class TestQueryService(unittest.TestCase):
         mock_connect.return_value = fake_conn
 
         from backend.services.query_service import get_query_logs
-        logs = get_query_logs()
+        logs = get_query_logs(
+            user_id=1,
+            allowed_resources=["customers"],
+        )
 
         self.assertEqual(logs, [])
 
@@ -139,34 +145,48 @@ class TestAlertService(unittest.TestCase):
     def test_get_all_alerts_returns_list(self, mock_connect):
         fake_cursor = MagicMock()
         fake_cursor.fetchall.return_value = [self._make_alert_row()]
-        fake_conn   = MagicMock()
+
+        fake_conn = MagicMock()
         fake_conn.cursor.return_value = fake_cursor
         mock_connect.return_value = fake_conn
 
         from backend.services.alert_service import get_all_alerts
-        alerts = get_all_alerts()
+
+        alerts = get_all_alerts(
+            user_id=1,
+            allowed_resources=["customers"],
+        )
 
         self.assertIsInstance(alerts, list)
+        self.assertEqual(len(alerts), 1)
 
     @patch("backend.database.connection.mysql.connector.connect")
     def test_get_dashboard_stats_has_required_keys(self, mock_connect):
         fake_cursor = MagicMock()
         fake_cursor.fetchone.return_value = {
-            "total_queries":         110,
-            "total_anomalies":        11,
-            "unacknowledged_alerts":   8,
-            "failed_queries":           2,
+            "total_queries": 110,
+            "total_anomalies": 11,
+            "total_alerts": 15,
+            "unacknowledged_alerts": 8,
+            "failed_queries": 2,
         }
+
         fake_conn = MagicMock()
         fake_conn.cursor.return_value = fake_cursor
         mock_connect.return_value = fake_conn
 
         from backend.services.alert_service import get_dashboard_stats
-        stats = get_dashboard_stats()
 
-        self.assertIn("total_queries",         stats)
+        stats = get_dashboard_stats(
+            user_id=1,
+            allowed_resources=["customers"],
+        )
+
+        self.assertIn("total_queries", stats)
+        self.assertIn("total_anomalies", stats)
+        self.assertIn("total_alerts", stats)
         self.assertIn("unacknowledged_alerts", stats)
-        self.assertIn("total_anomalies",       stats)
+        self.assertIn("failed_queries", stats)
 
 class TestIngestionFingerprintMigration(unittest.TestCase):
 
