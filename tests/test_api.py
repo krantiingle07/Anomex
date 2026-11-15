@@ -199,3 +199,39 @@ class TestApiRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertFalse(response.get_json()["success"])
+
+    def test_user_and_role_routes_reject_non_admin(self):
+        from unittest.mock import patch
+
+        with patch("backend.routes.get_session_user", return_value={"user_id": 2}), \
+             patch("backend.routes.get_user_permissions", return_value={"is_admin": False}), \
+             patch("backend.routes.users.get_all_users") as users_service, \
+             patch("backend.routes.users.get_all_roles") as roles_service:
+
+            for path in ("/api/users", "/api/roles"):
+                with self.subTest(path=path):
+                    response = self.client.get(
+                        path, headers={"Session-ID": "valid-session"}
+                    )
+                    self.assertEqual(response.status_code, 403)
+
+            users_service.assert_not_called()
+            roles_service.assert_not_called()
+
+    def test_user_and_role_routes_allow_admin(self):
+        from unittest.mock import patch
+
+        with patch("backend.routes.get_session_user", return_value={"user_id": 1}), \
+             patch("backend.routes.get_user_permissions", return_value={"is_admin": True}), \
+             patch("backend.routes.users.get_all_users", return_value=[]) as users_service, \
+             patch("backend.routes.users.get_all_roles", return_value=[]) as roles_service:
+
+            for path in ("/api/users", "/api/roles"):
+                with self.subTest(path=path):
+                    response = self.client.get(
+                        path, headers={"Session-ID": "valid-session"}
+                    )
+                    self.assertEqual(response.status_code, 200)
+
+            users_service.assert_called_once()
+            roles_service.assert_called_once()

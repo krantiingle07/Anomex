@@ -13,6 +13,13 @@
 --   Verified Anomex development database schema.
 
 
+-- Create/select the database for fresh installations.
+CREATE DATABASE IF NOT EXISTS access_control_db
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_0900_ai_ci;
+
+USE access_control_db;
+
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;

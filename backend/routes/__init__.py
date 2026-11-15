@@ -40,11 +40,6 @@ def require_authenticated_session(view):
     return wrapped
 
 
-from .auth import auth_bp
-from .alerts import alerts_bp
-from .queries import queries_bp
-from .users import users_bp
-from .ingestion import ingestion_bp
 
 
 def register_blueprints(app):
@@ -73,3 +68,11 @@ def require_database_admin(view):
         return view(*args, **kwargs)
 
     return wrapped
+
+
+# Import blueprints after defining authentication and authorization decorators.
+from .auth import auth_bp
+from .alerts import alerts_bp
+from .queries import queries_bp
+from .users import users_bp
+from .ingestion import ingestion_bp
