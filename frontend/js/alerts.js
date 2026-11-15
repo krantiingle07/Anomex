@@ -124,7 +124,7 @@ async function loadStats() {
     try {
         const stats = await apiFetch("/api/dashboard-stats");
 
-        animateCount(totalAlertsValue, stats.total_anomalies   ?? 0);
+        animateCount(totalAlertsValue, stats.total_alerts ?? 0);
         animateCount(unackedValue,     stats.unacknowledged_alerts ?? 0);
 
         // Calculate critical and acked from allAlerts
@@ -217,7 +217,7 @@ function buildAlertCard(alert) {
         <div class="alert-icon">${iconSymbol}</div>
 
         <div class="alert-content">
-            <div class="alert-title">${escapeHTML(alert.alert_type || "BEHAVIORAL")} — User ${alert.user_id ?? "?"}</div>
+            <div class="alert-title">${escapeHTML(alert.alert_type || "BEHAVIORAL")} / ${escapeHTML(alert.detection_source || "UNKNOWN")} — User ${alert.user_id ?? "?"}</div>
 
             <p class="alert-description">
                 ${escapeHTML(truncate(alert.description || "No description.", 160))}
@@ -266,7 +266,7 @@ function buildAlertCard(alert) {
 function openModal(alert) {
     activeAlertId = alert.alert_id;
 
-    modalTitle.textContent = `Alert #${alert.alert_id} — ${alert.alert_type || "BEHAVIORAL"}`;
+    modalTitle.textContent = `Alert #${alert.alert_id} — ${alert.alert_type || "BEHAVIORAL"} / ${alert.detection_source || "UNKNOWN"}`;
 
     modalBody.innerHTML = `
         <div class="modal-detail-row">

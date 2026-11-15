@@ -1,187 +1,171 @@
-# Project Overview
+# Anomex
 
-## Intelligent Database Access Control & Anomaly Detection System
+## Intelligent SQL Access Anomaly Detection System
 
-### Problem Statement
-Organizations face significant risks from insider threats and unauthorized database access. Traditional access control mechanisms cannot effectively detect suspicious query patterns or behavioral anomalies in real-time, leaving sensitive data vulnerable to misuse, data theft, and compliance violations.
+Anomex is a Python- and MySQL-based application for analyzing externally observed SQL activity. It combines role-based access control (RBAC), configurable access policies, user behavioral baselines, and machine-learning analysis to identify potentially suspicious database activity.
 
-### Solution
-This project implements an **enterprise-grade database security system** that combines robust access control with AI-powered anomaly detection. The system monitors all database queries, builds behavioral baselines for users, and automatically detects suspicious activities that may indicate insider threats or unauthorized data access.
+**Architecture boundary:** Anomex processes activity submitted to its event-ingestion API. It is not currently a transparent SQL proxy or inline database firewall. An alert does not mean the original database operation was blocked.
 
-### Key Features
+## Core capabilities
 
-🔐 **Query-Level Access Control**
-- Role-based access control with SQL views
-- Column-level and row-level security enforcement
-- Fine-grained permission management
+- **RBAC:** evaluate observed operations against user roles and resource permissions.
+- **Policy analysis:** evaluate activity against configured access policies.
+- **Behavioral analysis:** compare activity with per-user behavioral baselines.
+- **ML-assisted detection:** use feature engineering and model analysis to identify anomalous activity.
+- **Event ingestion:** accept normalized activity events from trusted external producers.
+- **Investigation:** persist query activity and anomaly findings for review.
+- **Administration:** manage Anomex users and roles with role-restricted endpoints.
 
-📝 **Comprehensive Audit Logging**
-- Real-time logging of all database queries and data access
-- Metadata capture: user, timestamp, resource, operation type
-- Optimized storage using normalized schemas and indexing
+## Technology
 
-🤖 **ML-Powered Anomaly Detection**
-- Behavioral baseline learning from historical access patterns
-- Real-time threat scoring using ML models
-- Automatic flagging of suspicious queries and unusual access patterns
+- Python backend (Flask)
+- MySQL 8.4+
+- Python ML/data tooling (see `requirements.txt`)
+- HTML, CSS, and JavaScript frontend
 
-⚡ **High-Performance Analysis**
-- Efficient indexing strategies for fast query analysis on massive audit logs
-- Optimized stored procedures for complex pattern detection
-- Sub-second response times for access decisions
+## Architecture at a glance
 
-☁️ **Cloud-Ready Architecture**
-- Distributed database support
-- Multi-region replication for disaster recovery
-- Scalable design for enterprise workloads
+1. An external application or audit-event producer observes SQL activity.
+2. The producer submits an event to `POST /api/ingest/events` using the configured ingestion API key.
+3. Anomex validates and normalizes the event, resolves its actor, and loads authorization, policy, and behavioral context.
+4. The runtime detection pipeline evaluates the event and persists activity and findings.
+5. The frontend retrieves dashboard, query-log, and alert information through the backend API.
 
-### Technologies Used
-- **Database**: MySQL / Oracle
-- **Backend**: Python (ML Pipeline)
-- **Database Logic**: PL/SQL (Triggers, Stored Procedures, Views)
-- **ML Framework**: scikit-learn / TensorFlow
-- **Cloud**: AWS RDS / Google Cloud SQL / Azure Database
+See [Architecture](docs/architecture.md) and [Detection Flow](docs/detection-flow.md).
 
-### Real-World Applications
-✓ Detect insider threats in financial institutions  
-✓ Prevent data theft in healthcare organizations  
-✓ Ensure GDPR/compliance monitoring  
-✓ Enterprise security operations centers (SOCs)
+## Requirements
 
-## 🗄️ Database Design
-
-The system uses a relational database designed to provide secure access
-control, query monitoring, policy enforcement, audit tracking, and
-anomaly detection.
-
-The database consists of the following core entities:
-
-- **USER** – Stores user account details such as user ID, username, email,
-  department, account status, and creation date.
-
-- **ROLE** – Defines the roles available within the system.
-
-- **USER_ROLE** – Establishes the relationship between users and their
-  assigned roles, including role assignment details.
-
-- **SESSIONS** – Maintains user session information including login time,
-  logout time, IP address, and session status.
-
-- **ROLE_PERMISSION** – Defines the permissions associated with each role,
-  including operations and accessible resources.
-
-- **POLICY_VIOLATION** – Records violations related to security policies,
-  including policy rules, violation details, and status.
-
-- **QUERY_LOGS** – Stores database query activity including query text,
-  query hash, execution time, timestamp, and associated session.
-
-- **QUERY_TABLE_ACCESS** – Maps executed queries to the database tables
-  they access and records the type and time of access.
-
-- **TABLE_ACCESSED** – Stores information about database tables monitored
-  by the system.
-
-- **AUDIT_LOG** – Maintains an audit trail of database activities,
-  including actions, timestamps, IP addresses, and status.
-
-- **ANOMALY** – Stores detected anomalous activities along with anomaly
-  severity, message, and creation time.
-
-- **ANOMALY_ALERT** – Generates and maintains alerts for detected
-  anomalies, including alert type, severity, anomaly score,
-  acknowledgement status, and description.
-
-### 🔗 Database Relationships
-
-The major relationships in the database are:
-
-- **USER → USER_ROLE**: A user can have multiple role assignments.
-- **USER_ROLE → ROLE**: Each role assignment is associated with a role.
-- **USER → SESSIONS**: A user can create multiple sessions.
-- **SESSIONS → QUERY_LOGS**: A session can generate multiple query logs.
-- **ROLE → ROLE_PERMISSION**: A role can have multiple permissions.
-- **QUERY_LOGS → QUERY_TABLE_ACCESS**: A query can contain multiple
-  table-access records.
-- **QUERY_TABLE_ACCESS → TABLE_ACCESSED**: Table-access records identify
-  the accessed database tables.
-- **QUERY_LOGS → AUDIT_LOG**: Query activities can be recorded in the
-  audit trail.
-- **QUERY_LOGS → ANOMALY**: Query activities are analyzed for anomalous
-  behavior.
-- **ANOMALY → ANOMALY_ALERT**: Detected anomalies can generate alerts.
-- **ROLE_PERMISSION → POLICY_VIOLATION**: Permission-related activities
-  can be evaluated against security policies.
-
-### 🛡️ Security Monitoring Flow
-
-The database supports the following security monitoring flow:
-
-**User → Session → Query Logs → Table Access**
-
-with parallel security tracking through:
-
-**Query Logs → Audit Logs**
-
-and:
-
-**Query Logs → Anomaly Detection → Anomaly Alerts**
-
-This relational structure enables ANOMEX to maintain a traceable record
-of database access activities while supporting access control,
-monitoring, auditing, and anomaly detection.
-
-## 📊 ER Diagram
-
-![ANOMEX ER Diagram](frontend/images/AnomexER.jpg)
+- Python compatible with `requirements.txt`
+- MySQL 8.4+ (or compatible supported MySQL server)
+- Modern browser
+- Git
 
 ## Run locally
 
-1. Create and activate a Python virtual environment, then install dependencies:
+Run commands from the repository root.
 
-   ```powershell
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
+### 1. Create and activate a virtual environment
 
-2. Copy `.env.example` to `.env` and set the local MySQL credentials.
-3. Initialize the application database from the repository root:
+Linux/macOS:
 
-   ```powershell
-   cmd /c "mysql -u root -p < sql\init_db.sql"
-   ```
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-4. Start the API:
+Windows PowerShell:
 
-   ```powershell
-   python -m backend.app
-   ```
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-5. Serve the `frontend` folder with a static web server and open `index.html`.
-   The frontend connects to the API at `http://127.0.0.1:5000`.
+### 2. Install dependencies
 
-The initializer creates the application tables but does not insert sample
-accounts. Create an active user with a bcrypt password hash before signing in.
+```bash
+python -m pip install -r requirements.txt
+```
 
-## ✨ Key Features
+### 3. Configure environment
 
-- User authentication
-- Role-based access control
-- Query monitoring
-- Query logging
-- Audit logging
-- Anomaly detection
-- Anomaly alerts
+Copy `.env.example` to `.env` and configure MySQL connection values. Set private values for:
 
-## 👥 Team
+- `ANOMEX_ADMIN_PASSWORD`
+- `ANOMEX_ANALYST_PASSWORD`
+- `ANOMEX_FINANCE_PASSWORD`
+- `ANOMEX_GUEST_PASSWORD`
 
-Kranti Ingale,
-Ankita Salpekar,
-Ankita Karke,
-Ayush Bage,
-Tanishq Shivasharan.
+Configure a strong `ANOMEX_INGESTION_API_KEY` for trusted event producers. Keep `.env` private and never commit credentials.
 
-## 📄 Project Status
+### 4. Create a fresh database
 
-Under Development...
+For a new, empty database only:
+
+```bash
+mysql -u root -p < sql/schema/001_initial_schema.sql
+```
+
+Apply versioned migrations:
+
+```bash
+python -m backend.database.migrate
+```
+
+Seed demonstration roles, resources, users, role assignments, permissions, policies, and behavioral baselines:
+
+```bash
+python -m backend.database.seed
+```
+### 5. Generate synthetic training data and train the model
+
+Runtime ML detection requires a trained model artifact. Generate synthetic
+activity with ground-truth labels, then train the Isolation Forest model:
+
+```bash
+python -m ml.experiments.generate_query_logs --normal 1000 --anomalous 100
+python -m ml.experiments.train_runtime_model
+```
+
+The trained artifact is saved under `ml/models/artifacts/`. It is excluded
+from Git and must be generated locally before using ML-based runtime detection.
+
+These commands generate synthetic development data; they do not represent
+real production database activity.
+
+**Do not run the canonical schema against a populated database.** For existing installations, back up the database and use the migration runner. The seed script updates predefined baseline records; review its effects before running it against an established environment.
+
+### 6. Start the backend
+
+```bash
+python -m backend.app
+```
+
+The local development API is served at `http://127.0.0.1:5000`.
+
+### 7. Serve the frontend
+
+Serve the `frontend/` directory with a static HTTP server and open `index.html`.
+
+## Tests
+
+Run from the repository root with the virtual environment activated:
+
+```bash
+python -m pytest -q
+```
+
+Latest recorded local result during development: **218 passed, 14 subtests passed**. Results may vary with environment and subsequent changes.
+
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [System architecture](docs/architecture.md)
+- [Event ingestion and detection flow](docs/detection-flow.md)
+- [Detection model](docs/detection-model.md)
+- [Database design and installation](docs/database-and-installation.md)
+- [API reference](docs/api-reference.md)
+- [Testing and known limitations](docs/testing-and-limitations.md)
+
+## Database notes
+
+- `sql/schema/001_initial_schema.sql` is the canonical schema for fresh installations.
+- `backend/database/migrate.py` applies versioned migrations and records them in `schema_migrations`.
+- `sql/init_db.sql` is deprecated.
+- `sql/schema/SQL Basics/` contains educational SQL examples, not the application initializer.
+
+## Security and operational limitations
+
+- Activity collection must be provided by a trusted producer or an operational audit-log integration.
+- The MySQL Enterprise Audit JSON utility parses audit JSON; it is not by itself a live log tailer.
+- MySQL Community Server does not include the MySQL Enterprise Audit plugin by default.
+- Synthetic seed accounts are for local development and demonstration.
+- Detection findings are signals for investigation, not proof of malicious intent or database-side prevention.
+- Passing automated tests does not replace production hardening, monitoring, backup/recovery testing, load testing, or security review.
+
+## Team
+
+Kranti Ingale, Ankita Salpekar, Ankita Karke, Ayush Bage, and Tanishq Shivasharan.
+
+## Project status
+
+Under development.
