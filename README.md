@@ -134,7 +134,7 @@ Run from the repository root with the virtual environment activated:
 python -m pytest -q
 ```
 
-Latest recorded local result during development: **218 passed, 14 subtests passed**. Results may vary with environment and subsequent changes.
+Latest recorded local result during development: **222 passed, 14 subtests passed**. Results may vary with environment and subsequent changes.
 
 ## Documentation
 
