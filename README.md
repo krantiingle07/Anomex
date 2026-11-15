@@ -168,4 +168,4 @@ Kranti Ingale, Ankita Salpekar, Ankita Karke, Ayush Bage, and Tanishq Shivashara
 
 ## Project status
 
-Under development.
+Completed and may introduce rolling updates!
