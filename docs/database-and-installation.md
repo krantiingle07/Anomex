@@ -44,13 +44,29 @@ Run commands from the repository root.
    python -m backend.database.seed
    ```
 
-8. Start the backend:
+8. Generate synthetic training data and train the model
+
+Runtime ML detection requires a trained model artifact. Generate synthetic
+activity with ground-truth labels, then train the Isolation Forest model:
+
+   ```bash
+   python -m ml.experiments.generate_query_logs --normal 1000 --anomalous 100
+   python -m ml.experiments.train_runtime_model
+   ```
+
+The trained artifact is saved under `ml/models/artifacts/`. It is excluded
+from Git and must be generated locally before using ML-based runtime detection.
+
+These commands generate synthetic development data; they do not represent
+real production database activity.
+
+9. Start the backend:
 
    ```bash
    python -m backend.app
    ```
 
-9. Serve `frontend/` using a static HTTP server and open `index.html`.
+10. Serve `frontend/` using a static HTTP server and open `index.html`.
 
 ## Existing installations
 

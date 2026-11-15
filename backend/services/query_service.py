@@ -1,9 +1,9 @@
-
 """
 Business logic for query log retrieval.
 """
 
 from backend.database.connection import get_connection
+from backend.services.resource_scope import build_resource_scope
 
 
 def get_query_logs(
@@ -15,49 +15,53 @@ def get_query_logs(
 ) -> list:
     """Return paginated query logs within the caller's authorization scope."""
 
-    if not is_admin and (user_id is None or allowed_resources is None):
-        raise ValueError("User scope and resource permissions are required")
+    conditions = []
+    params = []
+
+    if not is_admin:
+        if user_id is None or allowed_resources is None:
+            raise ValueError(
+                "User scope and resource permissions are required"
+            )
+
+        resource_scope, resource_params = build_resource_scope(
+            "q", allowed_resources
+        )
+
+        if resource_scope is None:
+            return []
+
+        conditions.extend([
+            "q.user_id = %s",
+            resource_scope,
+        ])
+        params.append(user_id)
+        params.extend(resource_params)
+
+    where_clause = (
+        "WHERE " + " AND ".join(conditions)
+        if conditions else ""
+    )
 
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
 
     try:
-        conditions = []
-        params = []
-
-        if not is_admin:
-            conditions.append("user_id = %s")
-            params.append(user_id)
-
-            if not allowed_resources:
-                return []
-
-            placeholders = ", ".join(["%s"] * len(allowed_resources))
-            conditions.append(f"LOWER(resource) IN ({placeholders})")
-            params.extend(
-                resource.lower() for resource in allowed_resources
-            )
-
-        where_clause = (
-            "WHERE " + " AND ".join(conditions)
-            if conditions else ""
-        )
-
         cursor.execute(
             f"""
             SELECT
-                log_id,
-                user_id,
-                session_id,
-                query_text,
-                resource,
-                execution_time_ms,
-                status,
-                error_message,
-                timestamp
-            FROM query_logs
+                q.log_id,
+                q.user_id,
+                q.session_id,
+                q.query_text,
+                q.resource,
+                q.execution_time_ms,
+                q.status,
+                q.error_message,
+                q.timestamp
+            FROM query_logs AS q
             {where_clause}
-            ORDER BY timestamp DESC
+            ORDER BY q.timestamp DESC
             LIMIT %s OFFSET %s
             """,
             params + [limit, offset],

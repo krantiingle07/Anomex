@@ -4,7 +4,7 @@ Business logic for anomaly alerts and dashboard statistics.
 """
 
 from backend.database.connection import get_connection
-
+from backend.services.resource_scope import build_resource_scope
 
 def _build_scope(alias, user_id, allowed_resources, is_admin):
     """Build a fail-closed SQL authorization scope."""
@@ -13,23 +13,21 @@ def _build_scope(alias, user_id, allowed_resources, is_admin):
         return "", []
 
     if user_id is None or allowed_resources is None:
-        raise ValueError("User scope and resource permissions are required")
+        raise ValueError(
+            "User scope and resource permissions are required"
+        )
 
-    if not allowed_resources:
+    resource_scope, resource_params = build_resource_scope(
+        alias, allowed_resources
+    )
+
+    if resource_scope is None:
         return None, []
 
-    placeholders = ", ".join(["%s"] * len(allowed_resources))
-
-    conditions = [
-        f"{alias}.user_id = %s",
-        f"LOWER({alias}.resource) IN ({placeholders})",
-    ]
-
-    params = [user_id]
-    params.extend(resource.lower() for resource in allowed_resources)
-
-    return " AND ".join(conditions), params
-
+    return (
+        f"{alias}.user_id = %s AND {resource_scope}",
+        [user_id] + resource_params,
+    )
 
 def get_all_alerts(
     severity: str = None,

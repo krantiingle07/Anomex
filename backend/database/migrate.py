@@ -179,15 +179,29 @@ def migration_005_add_mysql_account_mappings(connection):
 
 
 def migration_006_add_ingestion_event_fingerprint(connection):
-    """Store a payload fingerprint to detect conflicting event ID reuse."""
+    """Add the event fingerprint column if it is not already present."""
     cursor = connection.cursor()
+
     try:
         cursor.execute("""
-            ALTER TABLE ingestion_events
-            ADD COLUMN event_fingerprint CHAR(64)
-                CHARACTER SET ascii COLLATE ascii_bin NULL
-                AFTER log_id
+            SELECT COUNT(*)
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'ingestion_events'
+              AND COLUMN_NAME = 'event_fingerprint'
         """)
+
+        if not cursor.fetchone()[0]:
+            cursor.execute("""
+                ALTER TABLE ingestion_events
+                ADD COLUMN event_fingerprint CHAR(64)
+                    CHARACTER SET ascii COLLATE ascii_bin NULL
+                    AFTER log_id
+            """)
+            print("Added ingestion_events.event_fingerprint")
+        else:
+            print("Column ingestion_events.event_fingerprint already exists")
+
     finally:
         cursor.close()
 
@@ -226,32 +240,6 @@ MIGRATIONS = [
 ]
 
 
-def migration_006_add_ingestion_event_fingerprint(connection):
-    """Store a payload fingerprint to detect conflicting event ID reuse."""
-    cursor = connection.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'ingestion_events'
-              AND COLUMN_NAME = 'event_fingerprint'
-        """)
-
-        if not cursor.fetchone()[0]:
-            cursor.execute("""
-                ALTER TABLE ingestion_events
-                ADD COLUMN event_fingerprint CHAR(64)
-                    CHARACTER SET ascii COLLATE ascii_bin NULL
-                    AFTER log_id
-            """)
-            print("Added ingestion_events.event_fingerprint")
-        else:
-            print("Column ingestion_events.event_fingerprint already exists")
-
-    finally:
-        cursor.close()
 
 
 def run_migrations():

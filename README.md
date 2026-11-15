@@ -96,10 +96,25 @@ Seed demonstration roles, resources, users, role assignments, permissions, polic
 ```bash
 python -m backend.database.seed
 ```
+### 5. Generate synthetic training data and train the model
+
+Runtime ML detection requires a trained model artifact. Generate synthetic
+activity with ground-truth labels, then train the Isolation Forest model:
+
+```bash
+python -m ml.experiments.generate_query_logs --normal 1000 --anomalous 100
+python -m ml.experiments.train_runtime_model
+```
+
+The trained artifact is saved under `ml/models/artifacts/`. It is excluded
+from Git and must be generated locally before using ML-based runtime detection.
+
+These commands generate synthetic development data; they do not represent
+real production database activity.
 
 **Do not run the canonical schema against a populated database.** For existing installations, back up the database and use the migration runner. The seed script updates predefined baseline records; review its effects before running it against an established environment.
 
-### 5. Start the backend
+### 6. Start the backend
 
 ```bash
 python -m backend.app
@@ -107,7 +122,7 @@ python -m backend.app
 
 The local development API is served at `http://127.0.0.1:5000`.
 
-### 6. Serve the frontend
+### 7. Serve the frontend
 
 Serve the `frontend/` directory with a static HTTP server and open `index.html`.
 

@@ -32,7 +32,20 @@ The migration set creates an `ingestion_events` registry keyed by `source` and `
 
 ## Transaction behavior
 
-The ingestion service is designed to persist the event and associated detection state within a database transaction. On processing failure, the service rolls back rather than intentionally leaving partially persisted state.
+The ingestion workflow uses separate persistence stages:
+
+1. The query log, associated resource-access records, and ingestion-event
+   registry entry are written in one transaction and committed.
+2. Runtime detection executes after the event transaction commits.
+3. Detection alerts are persisted in a separate transaction.
+
+A detection or alert-persistence failure can therefore occur after the
+activity event has already been committed. The ingestion registry and
+event fingerprint allow a retry with the same event ID and unchanged
+payload to reuse the existing query log and retry detection.
+
+This design prevents duplicate query-log creation on retries, but event
+persistence and alert persistence are not one atomic transaction.
 
 ## Collection boundary
 
